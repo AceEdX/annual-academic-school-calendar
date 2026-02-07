@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CalendarEvent, EventCategory, categoryLabels, categoryIcons } from "@/data/calendarData";
 import {
   Dialog,
@@ -51,6 +51,15 @@ export default function EventModal({
   const [date, setDate] = useState(event?.date ?? defaultDate ?? "");
   const [category, setCategory] = useState<EventCategory>(event?.category ?? "general");
   const [description, setDescription] = useState(event?.description ?? "");
+
+  useEffect(() => {
+    if (open) {
+      setTitle(event?.title ?? "");
+      setDate(event?.date ?? defaultDate ?? "");
+      setCategory(event?.category ?? "general");
+      setDescription(event?.description ?? "");
+    }
+  }, [open, event, defaultDate]);
 
   const isEditing = !!event;
 
