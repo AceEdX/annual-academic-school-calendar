@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { CalendarEvent } from "@/data/calendarData";
 import EventBadge from "./EventBadge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 interface MonthCalendarProps {
   year: number;
@@ -133,7 +136,7 @@ export default function MonthCalendar({
                       {cell.day}
                     </span>
                     <div className="mt-0.5 space-y-0.5">
-                      {cell.events.slice(0, 2).map((evt) => (
+                      {cell.events.slice(0, 3).map((evt) => (
                         <div
                           key={evt.id}
                           onClick={(e) => {
@@ -144,10 +147,36 @@ export default function MonthCalendar({
                           <EventBadge event={evt} compact />
                         </div>
                       ))}
-                      {cell.events.length > 2 && (
-                        <span className="text-[10px] text-muted-foreground pl-1">
-                          +{cell.events.length - 2} more
-                        </span>
+                      {cell.events.length > 3 && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              className="text-[10px] text-primary font-medium pl-1 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              +{cell.events.length - 3} more
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-64 p-2 space-y-1" align="start">
+                            <div className="text-xs font-semibold text-foreground mb-2">
+                              All events on {new Date(cell.dateStr + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            </div>
+                            {cell.events.map((evt) => (
+                              <div key={evt.id} onClick={(e) => { e.stopPropagation(); onEventClick(evt); }}>
+                                <EventBadge event={evt} compact />
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full mt-2 gap-1 text-xs"
+                              onClick={(e) => { e.stopPropagation(); onDayClick(cell.dateStr); }}
+                            >
+                              <Plus className="w-3 h-3" />
+                              Add Event
+                            </Button>
+                          </PopoverContent>
+                        </Popover>
                       )}
                     </div>
                   </>
