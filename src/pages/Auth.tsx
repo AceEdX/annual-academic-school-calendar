@@ -48,9 +48,10 @@ export default function Auth() {
     if (mode === "signup") {
       const { error } = await signUp(emailResult.data, password);
       if (error) {
+        console.error("Sign up error:", error.message);
         const msg = error.message.includes("already registered")
           ? "This email is already registered. Please log in instead."
-          : error.message;
+          : "Sign up failed. Please try again later.";
         toast({ title: "Sign up failed", description: msg, variant: "destructive" });
       } else {
         toast({ title: "Account created!", description: "Please check your email to confirm your account, then log in." });
@@ -59,7 +60,8 @@ export default function Auth() {
     } else {
       const { error } = await signIn(emailResult.data, password);
       if (error) {
-        toast({ title: "Login failed", description: error.message, variant: "destructive" });
+        console.error("Login error:", error.message);
+        toast({ title: "Login failed", description: "Invalid email or password. Please try again.", variant: "destructive" });
       }
     }
 
