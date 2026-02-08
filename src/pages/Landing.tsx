@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import previewMonth from "@/assets/preview-month-view.jpg";
-import previewYear from "@/assets/preview-year-view.jpg";
-import previewEvent from "@/assets/preview-event-detail.jpg";
-import previewFilters from "@/assets/preview-filters.jpg";
+import previewTable from "@/assets/preview-table-view.jpeg";
+import previewCal1 from "@/assets/preview-calendar-view-1.jpeg";
+import previewCal2 from "@/assets/preview-calendar-view-2.jpeg";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 import { useAuth } from "@/hooks/useAuth";
 import { usePurchaseStatus } from "@/hooks/usePurchaseStatus";
@@ -47,10 +46,9 @@ const FEATURES = [
 ];
 
 const SCREENSHOTS = [
-  { title: "Month View", desc: "Clean calendar grid with color-coded events at a glance", img: previewMonth },
-  { title: "Year Overview", desc: "See all 13 months in a beautiful grid layout", img: previewYear },
-  { title: "Event Details", desc: "Click any day to add events or edit existing ones", img: previewEvent },
-  { title: "Smart Filters", desc: "Toggle categories to focus on what matters", img: previewFilters },
+  { title: "Event List View", desc: "Detailed month-wise table with dates, categories & descriptions", img: previewTable },
+  { title: "Month Calendar", desc: "Clean calendar grid with color-coded events at a glance", img: previewCal1 },
+  { title: "Events Sidebar", desc: "Quick view of upcoming events alongside the calendar", img: previewCal2 },
 ];
 
 export default function Landing() {
