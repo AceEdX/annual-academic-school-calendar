@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { User } from "@supabase/supabase-js";
 import { CalendarEvent, EventCategory, categoryLabels, categoryIcons } from "@/data/calendarData";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import MonthCalendar from "@/components/MonthCalendar";
@@ -17,6 +18,7 @@ import {
   RotateCcw,
   Calendar,
   GraduationCap,
+  LogOut,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,6 +26,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+interface IndexProps {
+  user: User;
+  onSignOut: () => void;
+}
 
 const MONTHS = [
   { year: 2026, month: 2 }, // Mar 2026
@@ -45,7 +52,7 @@ const allCategories: EventCategory[] = [
   "holiday", "sports", "academic", "cultural", "club", "exam", "general",
 ];
 
-export default function Index() {
+export default function Index({ user, onSignOut }: IndexProps) {
   const {
     events,
     addEvent,
@@ -151,6 +158,9 @@ export default function Index() {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-primary-foreground/70 hidden sm:inline">
+                {user.email}
+              </span>
               <Button
                 variant="secondary"
                 size="sm"
@@ -190,6 +200,15 @@ export default function Index() {
                 title="Reset to default events"
               >
                 <RotateCcw className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onSignOut}
+                className="gap-1.5"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </div>
