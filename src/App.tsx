@@ -7,6 +7,7 @@ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import CalendarPage from "./pages/CalendarPage";
 import NotFound from "./pages/NotFound";
+import PreviewCapture from "./pages/PreviewCapture";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/preview-capture" element={<PreviewCapture />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
