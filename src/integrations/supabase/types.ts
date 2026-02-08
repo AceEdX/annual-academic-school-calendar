@@ -14,13 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          amount: number
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          currency: string
+          id: string
+          payment_status: string
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_status?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          buyer_email?: string
+          buyer_name?: string
+          buyer_phone?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_status?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_paid_purchase: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
