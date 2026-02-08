@@ -1,57 +1,52 @@
 
 
-## Capture Live Calendar Screenshots for Landing Page Preview
+## Capture Live Calendar Screenshots for Preview Carousel
 
-### Problem
-The calendar page is behind authentication and payment gates, so we can't directly screenshot it. We need actual screenshots of the calendar features to use in the landing page preview carousel.
-
-### Approach
-We will temporarily add a public preview route that renders the calendar UI without requiring login, capture 3 high-quality screenshots of different views, save them as image assets, then remove the temporary route.
+### Overview
+Create a temporary public route to render the calendar without login/payment, capture 3 high-quality screenshots of different views, replace the current preview images, update the carousel, then clean up the temporary route.
 
 ### Step-by-Step
 
-**Step 1: Create a temporary public preview page**
-Create `src/pages/PreviewCapture.tsx` -- a simplified version of the calendar page that renders the `Index` component with a mock user object and no auth checks. This allows the browser tool to access and screenshot it.
+**Step 1: Create temporary preview page**
+Create `src/pages/PreviewCapture.tsx` that renders the `Index` component directly with a mock user object and a no-op sign-out function. This bypasses the `CalendarPage` auth/payment checks entirely. The calendar data loads from `localStorage` defaults, so all 100+ pre-loaded events will display automatically.
 
-**Step 2: Add a temporary route**
-Add `/preview-capture` route in `src/App.tsx` pointing to the new page.
+**Step 2: Add temporary route**
+Add `/preview-capture` to the routes in `src/App.tsx` pointing to this new page.
 
-**Step 3: Capture 3 screenshots using the browser tool**
-- **Screenshot 1 -- Month Calendar View**: The main calendar grid with the color-coded events, navigation, stats bar, and event sidebar visible
-- **Screenshot 2 -- Year View**: Switch to "Year View" mode showing all 13 months in a grid layout  
-- **Screenshot 3 -- Event Filters / Event Details**: Show the filter toggles and event list with categories highlighted
+**Step 3: Capture 3 screenshots at 1920x1080**
+Using the browser tool:
+- **Screenshot 1 -- Month Calendar View**: The default view showing the March 2026 calendar grid with color-coded events, the stats bar across the top, category filters, and the "Events This Month" sidebar
+- **Screenshot 2 -- Year View**: Click "Year View" to show all 13 months in a responsive grid
+- **Screenshot 3 -- Event Detail / Filters**: Navigate back to month view, click on an event to show the event detail modal overlay on top of the calendar
 
-Each screenshot will be taken at 1920x1080 for crisp, high-resolution preview images.
+**Step 4: Replace preview images**
+Save the 3 captured screenshots as:
+- `src/assets/preview-month-view.jpg` (Month Calendar)
+- `src/assets/preview-year-view.jpg` (Year View)
+- `src/assets/preview-event-detail.jpg` (Event Detail Modal)
 
-**Step 4: Save screenshots as assets**
-Replace the existing preview images:
-- `src/assets/preview-table-view.jpeg` (Month Calendar View)
-- `src/assets/preview-calendar-view-1.jpeg` (Year View)
-- `src/assets/preview-calendar-view-2.jpeg` (Filters and Events)
+**Step 5: Update carousel to use only 3 images**
+Update `src/components/PreviewCarousel.tsx` to show only 3 slides with accurate titles/descriptions matching the actual screenshots:
+1. "Month Calendar View" -- "Color-coded events on a clean calendar grid with category stats at a glance"
+2. "Year Overview" -- "All 13 months displayed in a grid -- see the full academic year at once"
+3. "Event Details" -- "Click any event to view, edit, or delete -- full customization at your fingertips"
 
-**Step 5: Update carousel captions**
-Update the `SCREENSHOTS` array in `Landing.tsx` with accurate titles and descriptions matching the actual screenshots taken.
+Remove the old unused imports (`previewFilters`, `previewTable`).
 
 **Step 6: Clean up**
 - Delete `src/pages/PreviewCapture.tsx`
-- Remove the `/preview-capture` route from `App.tsx`
-
-**Step 7: Add auto-play transitions**
-Enhance the carousel with smooth auto-playing transitions (4-second interval) with:
-- Fade/slide CSS animation between slides
-- Pause on hover
-- Animated progress bar indicator
-- Manual navigation still works
+- Remove the `/preview-capture` route from `src/App.tsx`
 
 ### Files to modify
 | File | Change |
 |------|--------|
-| `src/pages/PreviewCapture.tsx` | Create temporarily, then delete |
+| `src/pages/PreviewCapture.tsx` | Create temporarily for screenshot capture, then delete |
 | `src/App.tsx` | Add temporary route, then remove |
-| `src/assets/preview-*.jpeg` | Replace with actual screenshots |
-| `src/pages/Landing.tsx` | Update carousel captions and add auto-play |
-| `src/index.css` | Add progress bar animation keyframes |
+| `src/assets/preview-month-view.jpg` | Replace with fresh screenshot |
+| `src/assets/preview-year-view.jpg` | Replace with fresh screenshot |
+| `src/assets/preview-event-detail.jpg` | Replace with fresh screenshot |
+| `src/components/PreviewCarousel.tsx` | Update to 3 slides only, remove unused imports |
 
 ### No new dependencies needed
-All changes use existing React hooks and CSS transitions.
+Uses existing React components and browser screenshot tools.
 
