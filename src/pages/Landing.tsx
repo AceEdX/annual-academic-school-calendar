@@ -1,19 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import previewTable from "@/assets/preview-table-view.jpeg";
-import previewCal1 from "@/assets/preview-calendar-view-1.jpeg";
-import previewCal2 from "@/assets/preview-calendar-view-2.jpeg";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 import { useAuth } from "@/hooks/useAuth";
 import { usePurchaseStatus } from "@/hooks/usePurchaseStatus";
 import { Button } from "@/components/ui/button";
+import PreviewCarousel from "@/components/PreviewCarousel";
 import {
   Calendar,
   Download,
   Pencil,
   Filter,
-  ChevronLeft,
-  ChevronRight,
   Star,
   CheckCircle2,
   IndianRupee,
@@ -45,17 +41,10 @@ const FEATURES = [
   },
 ];
 
-const SCREENSHOTS = [
-  { title: "Event List View", desc: "Detailed month-wise table with dates, categories & descriptions", img: previewTable },
-  { title: "Month Calendar", desc: "Clean calendar grid with color-coded events at a glance", img: previewCal1 },
-  { title: "Events Sidebar", desc: "Quick view of upcoming events alongside the calendar", img: previewCal2 },
-];
-
 export default function Landing() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { hasPaid, loading: purchaseLoading } = usePurchaseStatus(user?.id);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [paymentOpen, setPaymentOpen] = useState(false);
 
   const loading = authLoading || (user ? purchaseLoading : false);
@@ -134,61 +123,7 @@ export default function Landing() {
       </section>
 
       {/* Preview Carousel */}
-      <section className="py-12 sm:py-16 bg-muted/50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-center text-foreground mb-8">
-            Preview the Calendar
-          </h2>
-
-          <div className="relative">
-            <div className="bg-card rounded-2xl border border-border shadow-lg overflow-hidden">
-              <div className="aspect-video relative">
-                <img
-                  src={SCREENSHOTS[currentSlide].img}
-                  alt={SCREENSHOTS[currentSlide].title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/80 to-transparent p-6">
-                  <h3 className="font-display text-xl font-bold text-primary-foreground">
-                    {SCREENSHOTS[currentSlide].title}
-                  </h3>
-                  <p className="text-primary-foreground/80 text-sm mt-1">
-                    {SCREENSHOTS[currentSlide].desc}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center gap-4 mt-6">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentSlide((p) => (p === 0 ? SCREENSHOTS.length - 1 : p - 1))}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <div className="flex gap-2">
-                {SCREENSHOTS.map((_, i) => (
-                  <button
-                    key={i}
-                    className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                      i === currentSlide ? "bg-primary" : "bg-border"
-                    }`}
-                    onClick={() => setCurrentSlide(i)}
-                  />
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentSlide((p) => (p === SCREENSHOTS.length - 1 ? 0 : p + 1))}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PreviewCarousel />
 
       {/* Features */}
       <section className="py-12 sm:py-16">
