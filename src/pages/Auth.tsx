@@ -4,9 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 
 const emailSchema = z.string().trim().email("Please enter a valid email address").max(255);
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters").max(72);
@@ -85,16 +86,14 @@ export default function Auth() {
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4">
-              <GraduationCap className="w-9 h-9 text-primary-foreground" />
-            </div>
+            <img src={aceEdxLogo} alt="AceEdX" className="h-16 w-auto mx-auto mb-4" />
             <h1 className="font-display text-3xl font-bold text-foreground">
               {mode === "login" ? "Welcome Back" : "Create Account"}
             </h1>
             <p className="text-muted-foreground mt-2">
               {mode === "login"
-                ? "Sign in to access your School Calendar"
-                : "Sign up to purchase the School Annual Calendar"}
+                ? "Sign in to access the Annual School Academic Calendar"
+                : "Sign up to purchase the Annual School Academic Calendar"}
             </p>
           </div>
 
