@@ -1,97 +1,57 @@
 
 
-## Annual School Academic Calendar by AceEdX -- Rebranding and Auth Flow Update
+## Capture Live Calendar Screenshots for Landing Page Preview
 
-### Overview
-This plan covers three main changes:
-1. **Rebrand** the entire app from "SchoolCal" to "Annual School Academic Calendar by AceEdX" with blue, gold, and white brand colors
-2. **Embed the AceEdX logo** (uploaded image) throughout the app
-3. **Redirect logged-in users** to the landing/purchase page (instead of requiring them to navigate there manually)
+### Problem
+The calendar page is behind authentication and payment gates, so we can't directly screenshot it. We need actual screenshots of the calendar features to use in the landing page preview carousel.
 
----
+### Approach
+We will temporarily add a public preview route that renders the calendar UI without requiring login, capture 3 high-quality screenshots of different views, save them as image assets, then remove the temporary route.
 
-### 1. Add the AceEdX Logo to the Project
+### Step-by-Step
 
-Copy the uploaded logo file (`Ace_EduX_Logo_3.png`) into `src/assets/` so it can be imported in React components.
+**Step 1: Create a temporary public preview page**
+Create `src/pages/PreviewCapture.tsx` -- a simplified version of the calendar page that renders the `Index` component with a mock user object and no auth checks. This allows the browser tool to access and screenshot it.
 
----
+**Step 2: Add a temporary route**
+Add `/preview-capture` route in `src/App.tsx` pointing to the new page.
 
-### 2. Update Brand Colors (Blue, Gold, White)
+**Step 3: Capture 3 screenshots using the browser tool**
+- **Screenshot 1 -- Month Calendar View**: The main calendar grid with the color-coded events, navigation, stats bar, and event sidebar visible
+- **Screenshot 2 -- Year View**: Switch to "Year View" mode showing all 13 months in a grid layout  
+- **Screenshot 3 -- Event Filters / Event Details**: Show the filter toggles and event list with categories highlighted
 
-Modify `src/index.css` CSS custom properties to use AceEdX brand colors:
+Each screenshot will be taken at 1920x1080 for crisp, high-resolution preview images.
 
-- **Primary** -- Blue (from the logo gradient, approximately `hsl(210, 70%, 45%)` or similar deep blue)
-- **Accent** -- Gold/amber (keeping the current warm gold `hsl(38, 92%, 50%)` which already matches)
-- **Background/Card** -- White and near-white tones
-- **Primary foreground** -- White text on blue backgrounds
+**Step 4: Save screenshots as assets**
+Replace the existing preview images:
+- `src/assets/preview-table-view.jpeg` (Month Calendar View)
+- `src/assets/preview-calendar-view-1.jpeg` (Year View)
+- `src/assets/preview-calendar-view-2.jpeg` (Filters and Events)
 
-This affects the entire app since all components use these CSS variables via Tailwind.
+**Step 5: Update carousel captions**
+Update the `SCREENSHOTS` array in `Landing.tsx` with accurate titles and descriptions matching the actual screenshots taken.
 
----
+**Step 6: Clean up**
+- Delete `src/pages/PreviewCapture.tsx`
+- Remove the `/preview-capture` route from `App.tsx`
 
-### 3. Update Landing Page (`src/pages/Landing.tsx`)
+**Step 7: Add auto-play transitions**
+Enhance the carousel with smooth auto-playing transitions (4-second interval) with:
+- Fade/slide CSS animation between slides
+- Pause on hover
+- Animated progress bar indicator
+- Manual navigation still works
 
-- **Navbar**: Replace the GraduationCap icon + "SchoolCal" text with the AceEdX logo image. Update title text.
-- **Hero Section**: Change heading to **"Annual School Academic Calendar"** with "by AceEdX" as a subtitle/badge.
-- **CTA buttons**: Will automatically pick up the new blue primary color.
-- **Footer**: Update branding text to reference AceEdX.
-- **Razorpay theme color**: Update from teal to brand blue in `PaymentModal.tsx`.
+### Files to modify
+| File | Change |
+|------|--------|
+| `src/pages/PreviewCapture.tsx` | Create temporarily, then delete |
+| `src/App.tsx` | Add temporary route, then remove |
+| `src/assets/preview-*.jpeg` | Replace with actual screenshots |
+| `src/pages/Landing.tsx` | Update carousel captions and add auto-play |
+| `src/index.css` | Add progress bar animation keyframes |
 
----
-
-### 4. Update Auth Page (`src/pages/Auth.tsx`)
-
-- Replace the GraduationCap icon with the AceEdX logo image.
-- Update heading text from "School Calendar" references to "Annual School Academic Calendar by AceEdX".
-
----
-
-### 5. Update Calendar Page Header (`src/pages/Index.tsx`)
-
-- Replace the GraduationCap icon in the header with the AceEdX logo.
-- Change the title from "School Annual Calendar" to "Annual School Academic Calendar by AceEdX".
-
----
-
-### 6. Redirect Logged-In Users to Landing Page
-
-Currently, when a user logs in via `Auth.tsx`, they are redirected to `/` (the landing page). The landing page already checks if the user has paid and redirects to `/calendar` if so. If they haven't paid, they see the landing page with the "Buy Now" button.
-
-This flow already works correctly -- logged-in users who haven't paid will land on the purchase page. No routing changes are needed; the existing logic handles this.
-
----
-
-### 7. Update Page Title (`index.html`)
-
-Change the document title and meta tags from "Lovable App" to "Annual School Academic Calendar by AceEdX".
-
----
-
-### Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/assets/` | Add `Ace_EduX_Logo_3.png` |
-| `src/index.css` | Update primary color from teal to brand blue |
-| `src/pages/Landing.tsx` | New heading, AceEdX logo, updated branding text |
-| `src/pages/Auth.tsx` | AceEdX logo, updated heading text |
-| `src/pages/Index.tsx` | AceEdX logo in header, updated title |
-| `src/components/PaymentModal.tsx` | Update Razorpay theme color to brand blue |
-| `index.html` | Update document title and meta description |
-
----
-
-### Technical Details
-
-**Color values derived from the logo:**
-- Primary blue: `hsl(215, 65%, 42%)` -- deep blue from logo
-- Accent gold: `hsl(38, 92%, 50%)` -- matches the gold "A" and "d" in the logo text (already set)
-- Background: `hsl(0, 0%, 100%)` -- pure white
-- Card: `hsl(0, 0%, 100%)` -- white cards
-
-**Logo usage:**
-- Import as ES6 module: `import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png"`
-- Render as an `<img>` tag with appropriate sizing (e.g., `h-10` in navbar, `h-16` on auth page)
-
-**No new dependencies required** -- all changes use existing Tailwind utilities and React patterns.
+### No new dependencies needed
+All changes use existing React hooks and CSS transitions.
 
