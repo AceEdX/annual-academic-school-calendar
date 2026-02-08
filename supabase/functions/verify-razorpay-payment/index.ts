@@ -70,6 +70,37 @@ serve(async (req) => {
       });
     }
 
+    // Validate Razorpay ID formats
+    if (typeof razorpay_order_id !== "string" || !razorpay_order_id.startsWith("order_")) {
+      return new Response(JSON.stringify({ error: "Invalid order ID format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof razorpay_payment_id !== "string" || !razorpay_payment_id.startsWith("pay_")) {
+      return new Response(JSON.stringify({ error: "Invalid payment ID format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof razorpay_signature !== "string" || !/^[a-f0-9]{64}$/.test(razorpay_signature)) {
+      return new Response(JSON.stringify({ error: "Invalid signature format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate purchase_id is a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (typeof purchase_id !== "string" || !uuidRegex.test(purchase_id)) {
+      return new Response(JSON.stringify({ error: "Invalid purchase ID format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Verify signature
     const razorpayKeySecret = Deno.env.get("RAZORPAY_KEY_SECRET")!;
     const isValid = await verifySignature(

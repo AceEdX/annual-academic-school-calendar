@@ -41,8 +41,25 @@ serve(async (req) => {
 
     const { buyer_name, buyer_email, buyer_phone } = await req.json();
 
-    if (!buyer_name || !buyer_phone) {
-      return new Response(JSON.stringify({ error: "Name and phone are required" }), {
+    // Validate buyer_name: 1-100 chars
+    if (!buyer_name || typeof buyer_name !== "string" || buyer_name.trim().length < 1 || buyer_name.length > 100) {
+      return new Response(JSON.stringify({ error: "Name is required and must be under 100 characters" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate buyer_phone: 10-digit Indian number starting with 6-9
+    if (!buyer_phone || typeof buyer_phone !== "string" || !/^[6-9]\d{9}$/.test(buyer_phone)) {
+      return new Response(JSON.stringify({ error: "A valid 10-digit Indian phone number is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate buyer_email if provided
+    if (buyer_email && (typeof buyer_email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyer_email))) {
+      return new Response(JSON.stringify({ error: "Invalid email format" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
