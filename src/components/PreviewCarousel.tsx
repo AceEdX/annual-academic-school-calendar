@@ -2,25 +2,37 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import previewMonth from "@/assets/preview-month-view.jpg";
-import previewYear from "@/assets/preview-year-view.jpg";
-import previewEventDetail from "@/assets/preview-event-detail.jpg";
+import previewCalendarMonth from "@/assets/preview-calendar-month.png";
+import previewCalendarSeptember from "@/assets/preview-calendar-september.png";
+import previewAddEvent from "@/assets/preview-add-event.png";
+import previewYearOverview from "@/assets/preview-year-overview.png";
+import previewTableList from "@/assets/preview-table-list.png";
 
 const SCREENSHOTS = [
   {
     title: "Month Calendar View",
     desc: "Color-coded events on a clean calendar grid with category stats at a glance",
-    img: previewMonth,
+    img: previewCalendarMonth,
+  },
+  {
+    title: "Events & Sidebar",
+    desc: "Browse events month by month with a detailed sidebar listing all activities",
+    img: previewCalendarSeptember,
+  },
+  {
+    title: "Add & Edit Events",
+    desc: "Easily add new events with title, date, category, and description",
+    img: previewAddEvent,
   },
   {
     title: "Year Overview",
-    desc: "All 13 months displayed in a grid — see the full academic year at once",
-    img: previewYear,
+    desc: "All 13 months displayed in a compact grid — see the full academic year at once",
+    img: previewYearOverview,
   },
   {
-    title: "Event Details",
-    desc: "Click any event to view, edit, or delete — full customization at your fingertips",
-    img: previewEventDetail,
+    title: "Table / List View",
+    desc: "View all events in a sortable table with date, category, and description",
+    img: previewTableList,
   },
 ];
 
