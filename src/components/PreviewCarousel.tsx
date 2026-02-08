@@ -4,9 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import previewMonth from "@/assets/preview-month-view.jpg";
 import previewYear from "@/assets/preview-year-view.jpg";
-import previewFilters from "@/assets/preview-filters.jpg";
 import previewEventDetail from "@/assets/preview-event-detail.jpg";
-import previewTable from "@/assets/preview-table-view.jpeg";
 
 const SCREENSHOTS = [
   {
@@ -20,19 +18,9 @@ const SCREENSHOTS = [
     img: previewYear,
   },
   {
-    title: "Smart Filters",
-    desc: "Toggle event categories on or off to focus on what matters most",
-    img: previewFilters,
-  },
-  {
     title: "Event Details",
     desc: "Click any event to view, edit, or delete — full customization at your fingertips",
     img: previewEventDetail,
-  },
-  {
-    title: "Event List View",
-    desc: "Detailed month-wise table with dates, categories & descriptions",
-    img: previewTable,
   },
 ];
 
