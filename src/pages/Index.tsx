@@ -6,6 +6,7 @@ import MonthCalendar from "@/components/MonthCalendar";
 import EventModal from "@/components/EventModal";
 import EventLegend from "@/components/EventLegend";
 import EventBadge from "@/components/EventBadge";
+import CategoryEventsPanel from "@/components/CategoryEventsPanel";
 import { downloadCSV, downloadPrintableHTML } from "@/utils/calendarExport";
 import { Button } from "@/components/ui/button";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
@@ -70,6 +71,7 @@ export default function Index({ user, onSignOut }: IndexProps) {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [defaultDate, setDefaultDate] = useState<string>("");
   const [viewMode, setViewMode] = useState<"month" | "year">("month");
+  const [selectedCategory, setSelectedCategory] = useState<EventCategory | null>(null);
 
   const currentMonth = MONTHS[currentMonthIdx];
 
@@ -217,9 +219,16 @@ export default function Index({ user, onSignOut }: IndexProps) {
         {/* Stats bar */}
         <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 sm:gap-3 mb-6">
           {allCategories.map((cat) => (
-            <div
+            <button
               key={cat}
-              className="bg-card rounded-lg border border-border p-2 sm:p-3 text-center"
+              className={`bg-card rounded-lg border p-2 sm:p-3 text-center transition-all cursor-pointer hover:shadow-md ${
+                selectedCategory === cat
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-border hover:border-primary/40"
+              }`}
+              onClick={() =>
+                setSelectedCategory((prev) => (prev === cat ? null : cat))
+              }
             >
               <div className="text-lg sm:text-xl font-bold text-foreground">
                 {stats[cat]}
@@ -227,9 +236,26 @@ export default function Index({ user, onSignOut }: IndexProps) {
               <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
                 {categoryIcons[cat]} {categoryLabels[cat]}
               </div>
-            </div>
+            </button>
           ))}
         </div>
+
+        {/* Category events panel */}
+        {selectedCategory && (
+          <div className="mb-6">
+            <CategoryEventsPanel
+              category={selectedCategory}
+              events={events}
+              onEventClick={handleEventClick}
+              onAddEvent={(cat) => {
+                setEditingEvent(null);
+                setDefaultDate("");
+                setModalOpen(true);
+              }}
+              onClose={() => setSelectedCategory(null)}
+            />
+          </div>
+        )}
 
         {/* Legend / Filters */}
         <div className="mb-4">
