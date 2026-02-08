@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 210 40% 11%;
 
-    --primary: 187 60% 32%;
+    --primary: 215 65% 42%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 25% 93%;
@@ -32,7 +32,7 @@
 
     --border: 210 18% 89%;
     --input: 210 18% 89%;
-    --ring: 187 60% 32%;
+    --ring: 215 65% 42%;
 
     --radius: 0.625rem;
 
@@ -49,11 +49,11 @@
     --cal-club-bg: 38 92% 94%;
     --cal-exam: 340 65% 50%;
     --cal-exam-bg: 340 65% 95%;
-    --cal-general: 187 60% 32%;
-    --cal-general-bg: 187 60% 94%;
+    --cal-general: 215 65% 42%;
+    --cal-general-bg: 215 65% 94%;
     --cal-sunday: 0 60% 55%;
-    --cal-today: 187 60% 32%;
-    --cal-today-bg: 187 60% 94%;
+    --cal-today: 215 65% 42%;
+    --cal-today-bg: 215 65% 94%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -75,7 +75,7 @@
     --card-foreground: 210 20% 95%;
     --popover: 210 35% 10%;
     --popover-foreground: 210 20% 95%;
-    --primary: 187 55% 45%;
+    --primary: 215 60% 55%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 30% 16%;
     --secondary-foreground: 210 20% 95%;
@@ -87,7 +87,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 210 25% 18%;
     --input: 210 25% 18%;
-    --ring: 187 55% 45%;
+    --ring: 215 60% 55%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

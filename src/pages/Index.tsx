@@ -8,6 +8,7 @@ import EventLegend from "@/components/EventLegend";
 import EventBadge from "@/components/EventBadge";
 import { downloadCSV, downloadPrintableHTML } from "@/utils/calendarExport";
 import { Button } from "@/components/ui/button";
+import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,7 +18,6 @@ import {
   Printer,
   RotateCcw,
   Calendar,
-  GraduationCap,
   LogOut,
 } from "lucide-react";
 import {
@@ -145,15 +145,13 @@ export default function Index({ user, onSignOut }: IndexProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center">
-                <GraduationCap className="w-7 h-7 text-accent-foreground" />
-              </div>
+              <img src={aceEdxLogo} alt="AceEdX" className="h-12 w-auto" />
               <div>
                 <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
-                  School Annual Calendar
+                  Annual School Academic Calendar
                 </h1>
                 <p className="text-primary-foreground/80 text-sm mt-0.5">
-                  Academic Year 2026–27 • March 2026 to March 2027
+                  by AceEdX • Academic Year 2026–27 • March 2026 to March 2027
                 </p>
               </div>
             </div>
@@ -368,7 +366,7 @@ export default function Index({ user, onSignOut }: IndexProps) {
             </button>
           </p>
           <p className="mt-1">
-            📚 School Annual Calendar — Academic Year 2026–27
+            📚 Annual School Academic Calendar by AceEdX — Academic Year 2026–27
           </p>
         </footer>
       </main>

@@ -4,11 +4,11 @@ import previewMonth from "@/assets/preview-month-view.jpg";
 import previewYear from "@/assets/preview-year-view.jpg";
 import previewEvent from "@/assets/preview-event-detail.jpg";
 import previewFilters from "@/assets/preview-filters.jpg";
+import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 import { useAuth } from "@/hooks/useAuth";
 import { usePurchaseStatus } from "@/hooks/usePurchaseStatus";
 import { Button } from "@/components/ui/button";
 import {
-  GraduationCap,
   Calendar,
   Download,
   Pencil,
@@ -82,10 +82,7 @@ export default function Landing() {
       <nav className="bg-card border-b border-border sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-display text-lg font-bold text-foreground">SchoolCal</span>
+            <img src={aceEdxLogo} alt="AceEdX" className="h-10 w-auto" />
           </div>
           <div className="flex items-center gap-2">
             {user ? (
@@ -116,9 +113,10 @@ export default function Landing() {
               Academic Year 2026–27
             </div>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-              The Complete School
-              <span className="text-primary"> Annual Calendar</span>
+              Annual School
+              <span className="text-primary"> Academic Calendar</span>
             </h1>
+            <p className="text-lg text-accent font-semibold mt-2">by AceEdX</p>
             <p className="text-lg sm:text-xl text-muted-foreground mt-6 max-w-2xl mx-auto">
               100+ pre-loaded events — Indian holidays, sports tournaments, cultural fests, exams & club
               activities. Fully customizable for your school.
@@ -280,7 +278,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="bg-card border-t border-border py-6 text-center text-sm text-muted-foreground">
-        <p>📚 School Annual Calendar — Academic Year 2026–27</p>
+        <p>📚 Annual School Academic Calendar by AceEdX — Academic Year 2026–27</p>
         <p className="mt-1">Secure payments powered by Razorpay</p>
       </footer>
 

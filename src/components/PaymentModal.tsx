@@ -92,7 +92,7 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
         key: orderData.razorpay_key_id,
         amount: orderData.amount,
         currency: "INR",
-        name: "School Annual Calendar",
+        name: "Annual School Academic Calendar by AceEdX",
         description: "Academic Year 2026–27",
         order_id: orderData.order_id,
         prefill: {
@@ -126,7 +126,7 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
           }
         },
         theme: {
-          color: "#2a8f8f",
+          color: "#2563a8",
         },
       };
 
@@ -156,7 +156,7 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
         <div className="bg-muted rounded-lg p-4 mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-foreground">School Annual Calendar 2026–27</p>
+              <p className="font-medium text-foreground">Annual School Academic Calendar 2026–27</p>
               <p className="text-sm text-muted-foreground">Lifetime access • Fully customizable</p>
             </div>
             <div className="flex items-center gap-1 text-2xl font-bold text-foreground">
