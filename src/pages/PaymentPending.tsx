@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePurchaseStatus } from "@/hooks/usePurchaseStatus";
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 const PAYMENT_LINK = "https://rzp.io/rzp/spQ3H1T";
+const POLL_INTERVAL_MS = 8000;
 
 export default function PaymentPending() {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export default function PaymentPending() {
   const { toast } = useToast();
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -31,13 +33,42 @@ export default function PaymentPending() {
     }
   }, [authLoading, user, navigate]);
 
-  // If already paid, redirect to calendar
+  // If already paid, redirect to calendar immediately
   useEffect(() => {
     if (!authLoading && !purchaseLoading && user && hasPaid) {
       setVerified(true);
-      setTimeout(() => navigate("/calendar"), 1500);
+      navigate("/calendar");
     }
   }, [authLoading, purchaseLoading, user, hasPaid, navigate]);
+
+  // Auto-poll for payment verification every few seconds
+  useEffect(() => {
+    if (verified || !user || hasPaid) return;
+
+    const checkPayment = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("check-payment-status");
+        if (!error && data?.verified) {
+          setVerified(true);
+          await refetch();
+          toast({
+            title: "Payment Verified! 🎉",
+            description: "Redirecting you to the calendar now...",
+          });
+          navigate("/calendar");
+        }
+      } catch {
+        // Silent fail for auto-poll — user can still click manually
+      }
+    };
+
+    // Start polling
+    pollRef.current = setInterval(checkPayment, POLL_INTERVAL_MS);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [verified, user, hasPaid, refetch, toast, navigate]);
 
   const handleVerify = async () => {
     setVerifying(true);
@@ -50,15 +81,15 @@ export default function PaymentPending() {
         setVerified(true);
         toast({
           title: "Payment Verified! 🎉",
-          description: "You now have full access to the calendar.",
+          description: "Redirecting you to the calendar now...",
         });
         await refetch();
-        setTimeout(() => navigate("/calendar"), 1500);
+        navigate("/calendar");
       } else {
         toast({
           title: "Payment not found yet",
           description:
-            "Please complete the payment first, then try verifying again. It may take a minute to process.",
+            "Please complete the payment first, then try again. It may take a minute to process.",
           variant: "destructive",
         });
       }
@@ -151,8 +182,8 @@ export default function PaymentPending() {
 
               <Step
                 number={3}
-                title="Verify your payment"
-                description="Come back here and click the button below. We'll match your payment automatically."
+                title="Get instant access"
+                description="We auto-detect your payment. You'll be redirected to the calendar automatically, or click below to verify now."
               />
               <div className="pl-10">
                 <Button
@@ -174,6 +205,14 @@ export default function PaymentPending() {
                   )}
                 </Button>
               </div>
+            </div>
+
+            {/* Auto-detect notice */}
+            <div className="bg-primary/5 rounded-lg p-4 text-sm text-foreground flex items-start gap-3">
+              <Loader2 className="w-4 h-4 animate-spin text-primary mt-0.5 shrink-0" />
+              <p>
+                <strong>Auto-detecting payment...</strong> We're checking every few seconds. You'll be redirected as soon as we confirm your payment.
+              </p>
             </div>
 
             {/* Hint */}
