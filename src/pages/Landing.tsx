@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,7 +15,8 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import PaymentModal from "@/components/PaymentModal";
+
+const PAYMENT_LINK = "https://rzp.io/rzp/spQ3H1T";
 
 const FEATURES = [
   {
@@ -45,7 +45,6 @@ export default function Landing() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { hasPaid, loading: purchaseLoading } = usePurchaseStatus(user?.id);
-  const [paymentOpen, setPaymentOpen] = useState(false);
 
   const loading = authLoading || (user ? purchaseLoading : false);
 
@@ -59,7 +58,9 @@ export default function Landing() {
     if (!user) {
       navigate("/auth");
     } else {
-      setPaymentOpen(true);
+      // Open payment link in new tab and go to pending page
+      window.open(PAYMENT_LINK, "_blank");
+      navigate("/payment-pending");
     }
   };
 
@@ -215,18 +216,6 @@ export default function Landing() {
         <p className="mt-1">Secure payments powered by Razorpay</p>
       </footer>
 
-      {/* Payment Modal */}
-      {user && (
-        <PaymentModal
-          open={paymentOpen}
-          onClose={() => setPaymentOpen(false)}
-          user={user}
-          onSuccess={() => {
-            setPaymentOpen(false);
-            navigate("/calendar");
-          }}
-        />
-      )}
     </div>
   );
 }

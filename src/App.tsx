@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import CalendarPage from "./pages/CalendarPage";
+import PaymentPending from "./pages/PaymentPending";
 import NotFound from "./pages/NotFound";
 import PreviewCapture from "./pages/PreviewCapture";
 
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/payment-pending" element={<PaymentPending />} />
           <Route path="/preview-capture" element={<PreviewCapture />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
