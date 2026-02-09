@@ -1,19 +1,27 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const allowedOrigins = [
+  "https://annual-academic-school-calendar.lovable.app",
+  "https://id-preview--ebbe0e7b-e0ae-41c5-8ae7-1bae6bf26c7a.lovable.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  return {
+    "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Authenticate user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -26,7 +34,6 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // User client for auth
     const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -34,7 +41,7 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await supabaseUser.auth.getUser(token);
     if (claimsError || !claimsData?.user) {
-      console.error("Auth error:", claimsError?.message);
+      console.error("Auth verification failed");
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -52,12 +59,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Checking payment for user ${userId}, email: ${userEmail}`);
+    console.log("Checking payment status", { user_id: userId });
 
-    // Service role client for admin operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // First, check if user already has a paid purchase
+    // Check if user already has a paid purchase
     const { data: existingPurchase } = await supabaseAdmin
       .from("purchases")
       .select("id")
@@ -78,11 +84,10 @@ Deno.serve(async (req) => {
     const razorpayKeySecret = Deno.env.get("RAZORPAY_KEY_SECRET")!;
     const authString = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
 
-    // Fetch recent payments from Razorpay (last 7 days)
     const fromTimestamp = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000);
     const razorpayUrl = `https://api.razorpay.com/v1/payments?count=50&from=${fromTimestamp}`;
 
-    console.log(`Fetching Razorpay payments from: ${razorpayUrl}`);
+    console.log("Fetching recent payments from Razorpay");
 
     const razorpayResponse = await fetch(razorpayUrl, {
       headers: {
@@ -92,8 +97,7 @@ Deno.serve(async (req) => {
     });
 
     if (!razorpayResponse.ok) {
-      const errorText = await razorpayResponse.text();
-      console.error("Razorpay API error:", razorpayResponse.status, errorText);
+      console.error("Razorpay API request failed", { status: razorpayResponse.status });
       return new Response(
         JSON.stringify({ error: "Failed to verify payment with payment provider" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -103,7 +107,7 @@ Deno.serve(async (req) => {
     const razorpayData = await razorpayResponse.json();
     const payments = razorpayData.items || [];
 
-    console.log(`Found ${payments.length} recent payments from Razorpay`);
+    console.log("Razorpay payments fetched", { count: payments.length });
 
     // Find a captured payment matching user's email
     const matchingPayment = payments.find(
@@ -113,14 +117,14 @@ Deno.serve(async (req) => {
     );
 
     if (!matchingPayment) {
-      console.log("No matching captured payment found for email:", userEmail);
+      console.log("No matching payment found");
       return new Response(
         JSON.stringify({ verified: false }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Found matching payment: ${matchingPayment.id}, amount: ${matchingPayment.amount}`);
+    console.log("Matching payment found", { payment_id: matchingPayment.id });
 
     // Check if there's a pending purchase to update
     const { data: pendingPurchase } = await supabaseAdmin
@@ -131,7 +135,6 @@ Deno.serve(async (req) => {
       .limit(1);
 
     if (pendingPurchase && pendingPurchase.length > 0) {
-      // Update existing pending purchase
       const { error: updateError } = await supabaseAdmin
         .from("purchases")
         .update({
@@ -142,14 +145,13 @@ Deno.serve(async (req) => {
         .eq("id", pendingPurchase[0].id);
 
       if (updateError) {
-        console.error("Failed to update purchase:", updateError.message);
+        console.error("Failed to update purchase", { error_code: updateError.code });
         return new Response(
           JSON.stringify({ error: "Failed to update purchase record" }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
     } else {
-      // Create a new paid purchase record
       const { error: insertError } = await supabaseAdmin
         .from("purchases")
         .insert({
@@ -164,7 +166,7 @@ Deno.serve(async (req) => {
         });
 
       if (insertError) {
-        console.error("Failed to create purchase:", insertError.message);
+        console.error("Failed to create purchase", { error_code: insertError.code });
         return new Response(
           JSON.stringify({ error: "Failed to create purchase record" }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -172,13 +174,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log("Payment verified and purchase updated successfully");
+    console.log("Payment verified and purchase recorded");
     return new Response(
       JSON.stringify({ verified: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("Unexpected error:", err);
+    console.error("check-payment-status error", { type: err?.constructor?.name });
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

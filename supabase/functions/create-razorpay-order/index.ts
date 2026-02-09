@@ -1,13 +1,23 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const allowedOrigins = [
+  "https://annual-academic-school-calendar.lovable.app",
+  "https://id-preview--ebbe0e7b-e0ae-41c5-8ae7-1bae6bf26c7a.lovable.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  return {
+    "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -41,7 +51,6 @@ serve(async (req) => {
 
     const { buyer_name, buyer_email, buyer_phone } = await req.json();
 
-    // Validate buyer_name: 1-100 chars
     if (!buyer_name || typeof buyer_name !== "string" || buyer_name.trim().length < 1 || buyer_name.length > 100) {
       return new Response(JSON.stringify({ error: "Name is required and must be under 100 characters" }), {
         status: 400,
@@ -49,7 +58,6 @@ serve(async (req) => {
       });
     }
 
-    // Validate buyer_phone: 10-digit Indian number starting with 6-9
     if (!buyer_phone || typeof buyer_phone !== "string" || !/^[6-9]\d{9}$/.test(buyer_phone)) {
       return new Response(JSON.stringify({ error: "A valid 10-digit Indian phone number is required" }), {
         status: 400,
@@ -57,7 +65,6 @@ serve(async (req) => {
       });
     }
 
-    // Validate buyer_email if provided
     if (buyer_email && (typeof buyer_email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyer_email))) {
       return new Response(JSON.stringify({ error: "Invalid email format" }), {
         status: 400,
@@ -67,9 +74,8 @@ serve(async (req) => {
 
     const razorpayKeyId = Deno.env.get("RAZORPAY_KEY_ID")!;
     const razorpayKeySecret = Deno.env.get("RAZORPAY_KEY_SECRET")!;
-    const amountInPaise = 4900; // ₹49
+    const amountInPaise = 4900;
 
-    // Create Razorpay order
     const razorpayResponse = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: {
@@ -91,7 +97,7 @@ serve(async (req) => {
     const razorpayOrder = await razorpayResponse.json();
 
     if (!razorpayOrder.id) {
-      console.error("Razorpay order creation failed:", razorpayOrder);
+      console.error("Razorpay order creation failed", { status: razorpayResponse.status });
       return new Response(JSON.stringify({ error: "Failed to create Razorpay order" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -100,7 +106,6 @@ serve(async (req) => {
 
     console.log("Razorpay order created:", razorpayOrder.id);
 
-    // Save purchase record using service role
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -122,7 +127,7 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
-      console.error("Failed to insert purchase:", insertError);
+      console.error("Failed to insert purchase", { error_code: insertError.code });
       return new Response(JSON.stringify({ error: "Failed to record purchase" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -142,7 +147,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("Error in create-razorpay-order:", err);
+    console.error("create-razorpay-order error", { type: err?.constructor?.name });
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

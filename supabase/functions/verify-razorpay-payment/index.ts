@@ -1,11 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const allowedOrigins = [
+  "https://annual-academic-school-calendar.lovable.app",
+  "https://id-preview--ebbe0e7b-e0ae-41c5-8ae7-1bae6bf26c7a.lovable.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  return {
+    "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
 async function verifySignature(
   orderId: string,
@@ -30,6 +38,8 @@ async function verifySignature(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -70,7 +80,6 @@ serve(async (req) => {
       });
     }
 
-    // Validate Razorpay ID formats
     if (typeof razorpay_order_id !== "string" || !razorpay_order_id.startsWith("order_")) {
       return new Response(JSON.stringify({ error: "Invalid order ID format" }), {
         status: 400,
@@ -92,7 +101,6 @@ serve(async (req) => {
       });
     }
 
-    // Validate purchase_id is a valid UUID
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (typeof purchase_id !== "string" || !uuidRegex.test(purchase_id)) {
       return new Response(JSON.stringify({ error: "Invalid purchase ID format" }), {
@@ -101,7 +109,6 @@ serve(async (req) => {
       });
     }
 
-    // Verify signature
     const razorpayKeySecret = Deno.env.get("RAZORPAY_KEY_SECRET")!;
     const isValid = await verifySignature(
       razorpay_order_id,
@@ -111,16 +118,15 @@ serve(async (req) => {
     );
 
     if (!isValid) {
-      console.error("Invalid payment signature for order:", razorpay_order_id);
+      console.error("Invalid payment signature", { order_id: razorpay_order_id });
       return new Response(JSON.stringify({ error: "Invalid payment signature" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log("Payment signature verified for order:", razorpay_order_id);
+    console.log("Payment signature verified", { order_id: razorpay_order_id });
 
-    // Update purchase status using service role
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -140,14 +146,14 @@ serve(async (req) => {
       .single();
 
     if (updateError) {
-      console.error("Failed to update purchase:", updateError);
+      console.error("Failed to update purchase", { error_code: updateError.code });
       return new Response(JSON.stringify({ error: "Failed to update purchase record" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log("Purchase updated to paid:", purchase_id);
+    console.log("Purchase updated to paid", { purchase_id });
 
     // Sync to Google Sheets (fire and forget)
     try {
@@ -167,15 +173,15 @@ serve(async (req) => {
         });
         console.log("Synced to Google Sheets");
       }
-    } catch (sheetsErr) {
-      console.error("Google Sheets sync failed (non-critical):", sheetsErr);
+    } catch {
+      console.error("Google Sheets sync failed (non-critical)");
     }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Error in verify-razorpay-payment:", err);
+    console.error("verify-razorpay-payment error", { type: err?.constructor?.name });
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
