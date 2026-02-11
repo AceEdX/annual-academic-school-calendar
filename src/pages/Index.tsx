@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback } from "react";
-import { User } from "@supabase/supabase-js";
 import { CalendarEvent, EventCategory, categoryLabels, categoryIcons } from "@/data/calendarData";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import MonthCalendar from "@/components/MonthCalendar";
@@ -29,7 +28,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface IndexProps {
-  user: User;
+  userName: string;
+  userEmail: string;
   onSignOut: () => void;
 }
 
@@ -53,7 +53,7 @@ const allCategories: EventCategory[] = [
   "holiday", "sports", "academic", "cultural", "club", "exam", "general",
 ];
 
-export default function Index({ user, onSignOut }: IndexProps) {
+export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
   const {
     events,
     addEvent,
@@ -122,7 +122,6 @@ export default function Index({ user, onSignOut }: IndexProps) {
   const handlePrev = () => setCurrentMonthIdx((i) => Math.max(0, i - 1));
   const handleNext = () => setCurrentMonthIdx((i) => Math.min(MONTHS.length - 1, i + 1));
 
-  // Stats
   const stats = useMemo(() => {
     const counts: Record<EventCategory, number> = {
       holiday: 0, sports: 0, academic: 0, cultural: 0, club: 0, exam: 0, general: 0,
@@ -131,7 +130,6 @@ export default function Index({ user, onSignOut }: IndexProps) {
     return counts;
   }, [events]);
 
-  // Upcoming events
   const upcomingEvents = useMemo(() => {
     const monthEvents = getEventsForMonth(currentMonth.year, currentMonth.month);
     return monthEvents
@@ -159,7 +157,7 @@ export default function Index({ user, onSignOut }: IndexProps) {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm text-primary-foreground/70 hidden sm:inline">
-                {user.email}
+                {userEmail}
               </span>
               <Button
                 variant="secondary"
@@ -321,7 +319,6 @@ export default function Index({ user, onSignOut }: IndexProps) {
 
         {viewMode === "month" ? (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Main calendar */}
             <div className="lg:col-span-3">
               <MonthCalendar
                 year={currentMonth.year}
@@ -332,7 +329,6 @@ export default function Index({ user, onSignOut }: IndexProps) {
               />
             </div>
 
-            {/* Sidebar - Events this month */}
             <div className="lg:col-span-1">
               <div className="bg-card rounded-xl border border-border p-4 sticky top-6">
                 <h3 className="font-display text-lg font-bold text-foreground mb-3">
@@ -362,7 +358,6 @@ export default function Index({ user, onSignOut }: IndexProps) {
             </div>
           </div>
         ) : (
-          /* Year view - all months in a grid */
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {MONTHS.map((m, idx) => {
               const monthEvents = getEventsForMonth(m.year, m.month).filter((e) =>
@@ -383,7 +378,6 @@ export default function Index({ user, onSignOut }: IndexProps) {
           </div>
         )}
 
-        {/* Footer */}
         <footer className="mt-12 text-center text-sm text-muted-foreground pb-8">
           <p>
             Click any date to add your school's custom events • Click any event to edit or delete •{" "}
@@ -397,7 +391,6 @@ export default function Index({ user, onSignOut }: IndexProps) {
         </footer>
       </main>
 
-      {/* Event Modal */}
       <EventModal
         open={modalOpen}
         onClose={() => {

@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
-import { useAuth } from "@/hooks/useAuth";
-import { usePurchaseStatus } from "@/hooks/usePurchaseStatus";
 import { Button } from "@/components/ui/button";
 import PreviewCarousel from "@/components/PreviewCarousel";
 import {
@@ -11,12 +9,9 @@ import {
   Filter,
   Star,
   CheckCircle2,
-  IndianRupee,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-
-const PAYMENT_LINK = "https://rzp.io/rzp/spQ3H1T";
 
 const FEATURES = [
   {
@@ -43,25 +38,16 @@ const FEATURES = [
 
 export default function Landing() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-  const { hasPaid, loading: purchaseLoading } = usePurchaseStatus(user?.id);
 
-  const loading = authLoading || (user ? purchaseLoading : false);
-
-  // If already paid, redirect to calendar
-  if (!loading && user && hasPaid) {
+  // If already has access, redirect to calendar
+  const hasAccess = localStorage.getItem("calendar_access") === "true";
+  if (hasAccess) {
     navigate("/calendar");
     return null;
   }
 
-  const handleBuyNow = () => {
-    if (!user) {
-      navigate("/auth");
-    } else {
-      // Open payment link in new tab and go to pending page
-      window.open(PAYMENT_LINK, "_blank");
-      navigate("/payment-pending");
-    }
+  const handleGetStarted = () => {
+    navigate("/get-started");
   };
 
   return (
@@ -72,22 +58,10 @@ export default function Landing() {
           <div className="flex items-center gap-2">
             <img src={aceEdxLogo} alt="AceEdX" className="h-10 w-auto" />
           </div>
-          <div className="flex items-center gap-2">
-            {user ? (
-              <Button size="sm" onClick={handleBuyNow}>
-                Buy Now — ₹49
-              </Button>
-            ) : (
-              <>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
-                  Sign In
-                </Button>
-                <Button size="sm" onClick={() => navigate("/auth")}>
-                  Get Started
-                </Button>
-              </>
-            )}
-          </div>
+          <Button size="sm" onClick={handleGetStarted} className="gap-1.5">
+            <Download className="w-4 h-4" />
+            Free Download
+          </Button>
         </div>
       </nav>
 
@@ -110,13 +84,13 @@ export default function Landing() {
               activities. Fully customizable for your school.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-              <Button size="lg" className="gap-2 text-lg px-8 py-6" onClick={handleBuyNow}>
-                <IndianRupee className="w-5 h-5" />
-                Buy Now — Just ₹49
+              <Button size="lg" className="gap-2 text-lg px-8 py-6" onClick={handleGetStarted}>
+                <Download className="w-5 h-5" />
+                Free Download
               </Button>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <ShieldCheck className="w-4 h-4 text-primary" />
-                Secure payment via Razorpay
+                100% Free — No payment required
               </div>
             </div>
           </div>
@@ -154,7 +128,7 @@ export default function Landing() {
       <section className="py-12 sm:py-16 bg-muted/50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-8">
-            What's Included for ₹49
+            What's Included — Completely Free
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
             {[
@@ -165,7 +139,7 @@ export default function Landing() {
               "Examination schedules",
               "Cultural events & days",
               "CSV & print-ready export",
-              "Lifetime access & updates",
+              "Unlimited access & updates",
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border">
                 <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
@@ -176,7 +150,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Testimonial / Social proof */}
+      {/* Testimonial */}
       <section className="py-12 sm:py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="flex items-center justify-center gap-1 mb-4">
@@ -196,16 +170,16 @@ export default function Landing() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="font-display text-3xl sm:text-4xl font-bold">Ready to Get Started?</h2>
           <p className="mt-4 text-primary-foreground/80 text-lg">
-            Get your complete school calendar for just ₹49. Customize it for your school in minutes.
+            Get your complete school calendar for free. Customize it for your school in minutes.
           </p>
           <Button
             size="lg"
             variant="secondary"
             className="mt-8 text-lg px-8 py-6 gap-2"
-            onClick={handleBuyNow}
+            onClick={handleGetStarted}
           >
-            <IndianRupee className="w-5 h-5" />
-            Buy Now — ₹49
+            <Download className="w-5 h-5" />
+            Free Download
           </Button>
         </div>
       </section>
@@ -213,9 +187,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="bg-card border-t border-border py-6 text-center text-sm text-muted-foreground">
         <p>📚 Annual School Academic Calendar by AceEdX — Academic Year 2026–27</p>
-        <p className="mt-1">Secure payments powered by Razorpay</p>
       </footer>
-
     </div>
   );
 }

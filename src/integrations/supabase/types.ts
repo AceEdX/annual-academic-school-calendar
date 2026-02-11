@@ -21,6 +21,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          phone: string | null
         }
         Insert: {
           captured_at?: string
@@ -28,6 +29,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          phone?: string | null
         }
         Update: {
           captured_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          phone?: string | null
         }
         Relationships: []
       }
