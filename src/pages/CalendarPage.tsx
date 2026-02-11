@@ -1,35 +1,27 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { usePurchaseStatus } from "@/hooks/usePurchaseStatus";
 import Index from "./Index";
 
 export default function CalendarPage() {
-  const { user, loading: authLoading, signOut } = useAuth();
-  const { hasPaid, loading: purchaseLoading } = usePurchaseStatus(user?.id);
   const navigate = useNavigate();
+  const hasAccess = localStorage.getItem("calendar_access") === "true";
+  const userName = localStorage.getItem("user_name") || "User";
+  const userEmail = localStorage.getItem("user_email") || "";
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
+    if (!hasAccess) {
+      navigate("/get-started");
     }
-  }, [authLoading, user, navigate]);
+  }, [hasAccess, navigate]);
 
-  useEffect(() => {
-    if (!authLoading && !purchaseLoading && user && !hasPaid) {
-      navigate("/");
-    }
-  }, [authLoading, purchaseLoading, user, hasPaid, navigate]);
+  if (!hasAccess) return null;
 
-  if (authLoading || purchaseLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
+  const handleSignOut = () => {
+    localStorage.removeItem("calendar_access");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("user_email");
+    navigate("/");
+  };
 
-  if (!user || !hasPaid) return null;
-
-  return <Index user={user} onSignOut={signOut} />;
+  return <Index userName={userName} userEmail={userEmail} onSignOut={handleSignOut} />;
 }
