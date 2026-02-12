@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 import { Button } from "@/components/ui/button";
 import PreviewCarousel from "@/components/PreviewCarousel";
@@ -42,8 +42,7 @@ export default function Landing() {
   // If already has access, redirect to calendar
   const hasAccess = localStorage.getItem("calendar_access") === "true";
   if (hasAccess) {
-    navigate("/calendar");
-    return null;
+    return <Navigate to="/calendar" replace />;
   }
 
   const handleGetStarted = () => {
