@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +25,7 @@ export default function Auth() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate("/");
+      navigate("/calendar");
     }
   }, [user, loading, navigate]);
 
@@ -46,7 +47,7 @@ export default function Auth() {
     setSubmitting(true);
 
     if (mode === "signup") {
-      const { error } = await signUp(emailResult.data, password);
+      const { error } = await signUp(emailResult.data, password, fullName);
       if (error) {
         console.error("Sign up error:", error.message);
         const msg = error.message.includes("already registered")
@@ -54,8 +55,15 @@ export default function Auth() {
           : "Sign up failed. Please try again later.";
         toast({ title: "Sign up failed", description: msg, variant: "destructive" });
       } else {
-        toast({ title: "Account created!", description: "Please check your email to confirm your account, then log in." });
-        setMode("login");
+        toast({ title: "Welcome! 🎉", description: "Your account has been created. Enjoy your free calendar!" });
+        // Send calendar link email (best-effort)
+        try {
+          await supabase.functions.invoke("send-calendar-email", {
+            body: { email: emailResult.data, name: fullName },
+          });
+        } catch {
+          // Non-critical
+        }
       }
     } else {
       const { error } = await signIn(emailResult.data, password);

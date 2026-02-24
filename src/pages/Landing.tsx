@@ -1,4 +1,4 @@
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 import { Button } from "@/components/ui/button";
 import PreviewCarousel from "@/components/PreviewCarousel";
@@ -39,14 +39,10 @@ const FEATURES = [
 export default function Landing() {
   const navigate = useNavigate();
 
-  // If already has access, redirect to calendar
-  const hasAccess = localStorage.getItem("calendar_access") === "true";
-  if (hasAccess) {
-    return <Navigate to="/calendar" replace />;
-  }
+  // Auth-based redirect is handled by CalendarPage itself
 
   const handleGetStarted = () => {
-    navigate("/get-started");
+    navigate("/auth");
   };
 
   return (
