@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.capture-lead]
 verify_jwt = false
+
+[functions.send-calendar-email]
+verify_jwt = false
