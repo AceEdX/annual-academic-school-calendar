@@ -23,27 +23,11 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Clear any stale sessions on mount so fresh signup/login works
   useEffect(() => {
-    const clearStaleSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error || (session && !session.user)) {
-          await supabase.auth.signOut();
-        }
-      } catch {
-        // Network error — clear local storage to stop retry loops
-        await supabase.auth.signOut();
-      }
-    };
-    clearStaleSession();
-  }, []);
-
-  useEffect(() => {
-    if (!loading && user) {
+    if (user) {
       navigate("/calendar");
     }
-  }, [user, loading, navigate]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,13 +86,6 @@ export default function Auth() {
     setSubmitting(false);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
