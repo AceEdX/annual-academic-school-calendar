@@ -33,6 +33,12 @@ export function useAuth() {
         setUser(session?.user ?? null);
       }
       setLoading(false);
+    }).catch(() => {
+      // Network error or corrupted storage — force clear
+      supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
