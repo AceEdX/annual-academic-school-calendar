@@ -23,6 +23,22 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Clear any stale sessions on mount so fresh signup/login works
+  useEffect(() => {
+    const clearStaleSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error || (session && !session.user)) {
+          await supabase.auth.signOut();
+        }
+      } catch {
+        // Network error — clear local storage to stop retry loops
+        await supabase.auth.signOut();
+      }
+    };
+    clearStaleSession();
+  }, []);
+
   useEffect(() => {
     if (!loading && user) {
       navigate("/calendar");
@@ -46,31 +62,41 @@ export default function Auth() {
 
     setSubmitting(true);
 
-    if (mode === "signup") {
-      const { error } = await signUp(emailResult.data, password, fullName);
-      if (error) {
-        console.error("Sign up error:", error.message);
-        const msg = error.message.includes("already registered")
-          ? "This email is already registered. Please log in instead."
-          : "Sign up failed. Please try again later.";
-        toast({ title: "Sign up failed", description: msg, variant: "destructive" });
+    try {
+      if (mode === "signup") {
+        const { error } = await signUp(emailResult.data, password, fullName);
+        if (error) {
+          console.error("Sign up error:", error.message);
+          const msg = error.message.includes("already registered")
+            ? "This email is already registered. Please log in instead."
+            : error.message.includes("fetch") 
+              ? "Network error. Please check your connection and try again."
+              : "Sign up failed. Please try again later.";
+          toast({ title: "Sign up failed", description: msg, variant: "destructive" });
+        } else {
+          toast({ title: "Welcome! 🎉", description: "Your account has been created. Enjoy your free calendar!" });
+          // Send calendar link email (best-effort)
+          try {
+            await supabase.functions.invoke("send-calendar-email", {
+              body: { email: emailResult.data, name: fullName },
+            });
+          } catch {
+            // Non-critical
+          }
+        }
       } else {
-        toast({ title: "Welcome! 🎉", description: "Your account has been created. Enjoy your free calendar!" });
-        // Send calendar link email (best-effort)
-        try {
-          await supabase.functions.invoke("send-calendar-email", {
-            body: { email: emailResult.data, name: fullName },
-          });
-        } catch {
-          // Non-critical
+        const { error } = await signIn(emailResult.data, password);
+        if (error) {
+          console.error("Login error:", error.message);
+          const msg = error.message.includes("fetch")
+            ? "Network error. Please check your connection and try again."
+            : "Invalid email or password. Please try again.";
+          toast({ title: "Login failed", description: msg, variant: "destructive" });
         }
       }
-    } else {
-      const { error } = await signIn(emailResult.data, password);
-      if (error) {
-        console.error("Login error:", error.message);
-        toast({ title: "Login failed", description: "Invalid email or password. Please try again.", variant: "destructive" });
-      }
+    } catch (err) {
+      console.error("Auth error:", err);
+      toast({ title: "Error", description: "Something went wrong. Please try again.", variant: "destructive" });
     }
 
     setSubmitting(false);
