@@ -131,10 +131,13 @@ serve(async (req) => {
 
     if (!res.ok) {
       console.error("Resend error:", data);
-      return new Response(JSON.stringify({ error: "Failed to send email" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Return 200 with skipped=true so signup flow doesn't break.
+      // Common cause: Resend free tier only allows sending to the verified owner email
+      // until a domain is verified at resend.com/domains.
+      return new Response(
+        JSON.stringify({ success: false, skipped: true, reason: data?.message || "Email send failed" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(JSON.stringify({ success: true }), {
