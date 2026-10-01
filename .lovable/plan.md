@@ -1,20 +1,21 @@
+# Update the Academic Calendar to 2027–28
 
+## Scope
+- Make **March 2027 through May 2028** the main academic calendar.
+- Keep **October 2026 through February 2027** as clearly labelled preparation months.
+- Show every calendar date and weekday, including Sundays, across month and year views.
 
-# Store Resend API Key and Verify Email Delivery
+## Calendar Content
+- Replace the old schedule with a comprehensive India-focused calendar covering national holidays, major festivals, important Indian commemorative days, and high-value international/world observances.
+- Add a balanced programme of assemblies, examinations, parent meetings, teacher planning, wellbeing, inclusion, environment, arts, literacy, STEM, clubs, competitions, field activities, and indoor/outdoor sports.
+- Mark lunar, state-specific, and school-decided dates as tentative or customizable where appropriate.
 
-## Overview
-Store the provided Resend API key as a backend secret so the `send-calendar-email` function can send calendar links to users after signup.
+## Usability and Downloads
+- Update navigation, headings, date limits, landing-page wording, metadata, and download filenames for the new period.
+- Make CSV and printable downloads include every day in the full October 2026–May 2028 span, even dates without events.
+- Preserve event add, edit, delete, multiple-events-per-day, category filtering, and reset behaviour.
+- Version the default calendar data so returning users receive the new calendar while retaining their own custom events where possible.
 
-## Steps
-
-1. **Store the RESEND_API_KEY secret** using the secure secrets manager with the value you provided.
-
-2. **Deploy the send-calendar-email function** to ensure it picks up the new secret.
-
-3. **Verify the flow works end-to-end**: Sign up as a new user and confirm the welcome email with the calendar link is delivered.
-
-## Technical Details
-- The secret `RESEND_API_KEY` will be stored securely and accessible only by backend functions.
-- The existing `send-calendar-email` function already references `Deno.env.get("RESEND_API_KEY")` so no code changes are needed -- just the secret needs to be added.
-- Note: Resend's free tier uses `onboarding@resend.dev` as the sender, which works for testing. For production, you'll want to verify your own domain in Resend.
-
+## Verification
+- Check month/year navigation, representative holidays and Sunday dates, event editing, and both download formats.
+- Verify the app at desktop and mobile widths and resolve any current build or runtime errors.
