@@ -140,8 +140,7 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
     const monthEvents = getEventsForMonth(currentMonth.year, currentMonth.month);
     return monthEvents
       .filter((e) => activeFilters.has(e.category))
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, 8);
+      .sort((a, b) => a.date.localeCompare(b.date));
   }, [currentMonth, getEventsForMonth, activeFilters]);
 
   return (
