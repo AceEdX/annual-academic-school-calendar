@@ -275,13 +275,13 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
         </div>
 
         {/* View toggle + Navigation */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-1 bg-primary/10 rounded-lg p-1">
             <button
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 viewMode === "month"
-                  ? "bg-card shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-primary hover:bg-primary/10"
               }`}
               onClick={() => setViewMode("month")}
             >
@@ -291,8 +291,8 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
             <button
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 viewMode === "year"
-                  ? "bg-card shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-primary hover:bg-primary/10"
               }`}
               onClick={() => setViewMode("year")}
             >
@@ -308,22 +308,44 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
                 size="icon"
                 onClick={handlePrev}
                 disabled={currentMonthIdx === 0}
-                className="h-8 w-8"
+                className="h-9 w-9"
+                aria-label="Previous month"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="text-sm font-medium text-foreground min-w-[120px] text-center">
-                {new Date(currentMonth.year, currentMonth.month).toLocaleDateString("en-IN", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
+              <Select
+                value={String(currentMonthIdx)}
+                onValueChange={(v) => setCurrentMonthIdx(Number(v))}
+              >
+                <SelectTrigger className="w-[190px] h-9 font-medium" aria-label="Jump to month">
+                  <SelectValue>{monthLabel(currentMonth)}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Preparation months</SelectLabel>
+                    {PREP_MONTHS.map((m) => (
+                      <SelectItem key={m.idx} value={String(m.idx)}>
+                        {monthLabel(m)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Academic Year 2027–28</SelectLabel>
+                    {ACADEMIC_MONTHS.map((m) => (
+                      <SelectItem key={m.idx} value={String(m.idx)}>
+                        {monthLabel(m)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={handleNext}
                 disabled={currentMonthIdx === MONTHS.length - 1}
-                className="h-8 w-8"
+                className="h-9 w-9"
+                aria-label="Next month"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -340,20 +362,24 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
                 events={filteredEventsForMonth}
                 onDayClick={handleDayClick}
                 onEventClick={handleEventClick}
+                isPreparation={currentMonth.isPreparation}
               />
             </div>
 
             <div className="lg:col-span-1">
-              <div className="bg-card rounded-xl border border-border p-4 sticky top-6">
-                <h3 className="font-display text-lg font-bold text-foreground mb-3">
+              <div className="bg-card rounded-xl border border-border border-t-4 border-t-accent p-4 sticky top-6">
+                <h3 className="font-display text-lg font-bold text-primary mb-1">
                   Events This Month
                 </h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {upcomingEvents.length} event{upcomingEvents.length !== 1 ? "s" : ""} in {monthLabel(currentMonth)}
+                </p>
                 {upcomingEvents.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     No events this month with selected filters.
                   </p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
                     {upcomingEvents.map((evt) => (
                       <div key={evt.id} className="animate-slide-in">
                         <div className="text-[10px] text-muted-foreground mb-0.5 uppercase tracking-wide">
@@ -372,35 +398,66 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {MONTHS.map((m, idx) => {
-              const monthEvents = getEventsForMonth(m.year, m.month).filter((e) =>
-                activeFilters.has(e.category)
-              );
-              return (
-                <div key={idx}>
-                  <MonthCalendar
-                    year={m.year}
-                    month={m.month}
-                    events={monthEvents}
-                    onDayClick={handleDayClick}
-                    onEventClick={handleEventClick}
-                  />
+          <div className="space-y-10">
+            {[
+              {
+                title: "Preparation Months",
+                subtitle: "October 2026 – February 2027 • plan, consult and get ready for the new session",
+                months: PREP_MONTHS,
+              },
+              {
+                title: "Academic Year 2027–28",
+                subtitle: "March 2027 – May 2028",
+                months: ACADEMIC_MONTHS,
+              },
+            ].map((section) => (
+              <section key={section.title}>
+                <div className="mb-4 border-l-4 border-accent pl-3">
+                  <h2 className="font-display text-2xl font-bold text-primary">{section.title}</h2>
+                  <p className="text-sm text-muted-foreground">{section.subtitle}</p>
                 </div>
-              );
-            })}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {section.months.map((m) => {
+                    const monthEvents = getEventsForMonth(m.year, m.month).filter((e) =>
+                      activeFilters.has(e.category)
+                    );
+                    return (
+                      <MonthCalendar
+                        key={m.idx}
+                        year={m.year}
+                        month={m.month}
+                        events={monthEvents}
+                        onDayClick={handleDayClick}
+                        onEventClick={handleEventClick}
+                        isPreparation={m.isPreparation}
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         )}
 
         <footer className="mt-12 text-center text-sm text-muted-foreground pb-8">
           <p>
             Click any date to add your school's custom events • Click any event to edit or delete •{" "}
-            <button onClick={resetToDefaults} className="underline hover:text-foreground">
+            <button
+              onClick={() => {
+                if (window.confirm("Reset to the default 2027–28 calendar? Your own added events and edits will be removed.")) {
+                  resetToDefaults();
+                }
+              }}
+              className="underline hover:text-foreground"
+            >
               Reset to defaults
             </button>
           </p>
           <p className="mt-1">
-            📚 Annual School Academic Calendar by AceEdX — Academic Year 2026–27
+            Festival dates marked tentative or regional should be confirmed with your state's official holiday list.
+          </p>
+          <p className="mt-1">
+            📚 Annual School Academic Calendar by AceEdX — Academic Year 2027–28
           </p>
         </footer>
       </main>
