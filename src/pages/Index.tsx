@@ -7,7 +7,17 @@ import EventLegend from "@/components/EventLegend";
 import EventBadge from "@/components/EventBadge";
 import CategoryEventsPanel from "@/components/CategoryEventsPanel";
 import { downloadCSV, downloadPrintableHTML } from "@/utils/calendarExport";
+import { getCalendarMonths, MONTH_NAMES } from "@/utils/calendarRange";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 import {
   ChevronLeft,
@@ -33,21 +43,17 @@ interface IndexProps {
   onSignOut: () => void;
 }
 
-const MONTHS = [
-  { year: 2026, month: 2 }, // Mar 2026
-  { year: 2026, month: 3 }, // Apr
-  { year: 2026, month: 4 }, // May
-  { year: 2026, month: 5 }, // Jun
-  { year: 2026, month: 6 }, // Jul
-  { year: 2026, month: 7 }, // Aug
-  { year: 2026, month: 8 }, // Sep
-  { year: 2026, month: 9 }, // Oct
-  { year: 2026, month: 10 }, // Nov
-  { year: 2026, month: 11 }, // Dec
-  { year: 2027, month: 0 }, // Jan 2027
-  { year: 2027, month: 1 }, // Feb
-  { year: 2027, month: 2 }, // Mar 2027
-];
+const MONTHS = getCalendarMonths();
+const PREP_MONTHS = MONTHS.map((m, idx) => ({ ...m, idx })).filter((m) => m.isPreparation);
+const ACADEMIC_MONTHS = MONTHS.map((m, idx) => ({ ...m, idx })).filter((m) => !m.isPreparation);
+
+function initialMonthIdx() {
+  const now = new Date();
+  const idx = MONTHS.findIndex((m) => m.year === now.getFullYear() && m.month === now.getMonth());
+  return idx >= 0 ? idx : ACADEMIC_MONTHS[0].idx;
+}
+
+const monthLabel = (m: { year: number; month: number }) => `${MONTH_NAMES[m.month]} ${m.year}`;
 
 const allCategories: EventCategory[] = [
   "holiday", "sports", "academic", "cultural", "club", "exam", "general",
@@ -63,7 +69,7 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
     getEventsForMonth,
   } = useCalendarEvents();
 
-  const [currentMonthIdx, setCurrentMonthIdx] = useState(0);
+  const [currentMonthIdx, setCurrentMonthIdx] = useState(initialMonthIdx);
   const [activeFilters, setActiveFilters] = useState<Set<EventCategory>>(
     new Set(allCategories)
   );
