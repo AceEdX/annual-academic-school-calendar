@@ -1,22 +1,47 @@
 import { useState, useCallback } from "react";
-import { CalendarEvent, defaultEvents, generateId } from "@/data/calendarData";
+import { CalendarEvent, CALENDAR_VERSION, defaultEvents, generateId } from "@/data/calendarData";
+import { eventInMonth, isWithinCalendar } from "@/utils/calendarRange";
 
 const STORAGE_KEY = "school-calendar-events";
+const VERSION_KEY = "school-calendar-version";
+
+/**
+ * Brings saved events up to the current default calendar.
+ * Same version: keep everything as saved.
+ * Older version: load the new defaults and keep the school's own custom events that fall in the new span.
+ */
+export function migrateStoredEvents(
+  saved: CalendarEvent[] | null,
+  savedVersion: string | null,
+  defaults: CalendarEvent[] = defaultEvents,
+  currentVersion: string = CALENDAR_VERSION
+): CalendarEvent[] {
+  if (!saved) return defaults;
+  if (savedVersion === currentVersion) return saved;
+  const custom = saved.filter((e) => e.isCustom && isWithinCalendar(e.date));
+  return [...defaults, ...custom];
+}
 
 function loadEvents(): CalendarEvent[] {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      return JSON.parse(saved);
-    }
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const saved = raw ? (JSON.parse(raw) as CalendarEvent[]) : null;
+    const version = localStorage.getItem(VERSION_KEY);
+    const events = migrateStoredEvents(Array.isArray(saved) ? saved : null, version);
+    if (saved && version !== CALENDAR_VERSION) saveEvents(events);
+    return events;
   } catch {
-    // ignore
+    return defaultEvents;
   }
-  return defaultEvents;
 }
 
 function saveEvents(events: CalendarEvent[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+    localStorage.setItem(VERSION_KEY, CALENDAR_VERSION);
+  } catch {
+    // storage full or unavailable
+  }
 }
 
 export function useCalendarEvents() {
@@ -48,6 +73,7 @@ export function useCalendarEvents() {
 
   const resetToDefaults = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(VERSION_KEY);
     setEvents(defaultEvents);
   }, []);
 
@@ -57,11 +83,7 @@ export function useCalendarEvents() {
   );
 
   const getEventsForMonth = useCallback(
-    (year: number, month: number) =>
-      events.filter((e) => {
-        const d = new Date(e.date);
-        return d.getFullYear() === year && d.getMonth() === month;
-      }),
+    (year: number, month: number) => events.filter((e) => eventInMonth(e, year, month)),
     [events]
   );
 
