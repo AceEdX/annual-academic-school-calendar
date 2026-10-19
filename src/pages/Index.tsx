@@ -147,26 +147,28 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
   return (
     <div className="min-h-screen bg-background font-body">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground">
+      <header className="bg-primary text-primary-foreground border-b-4 border-accent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <img src={aceEdxLogo} alt="AceEdX" className="h-12 w-auto" />
+              <div className="bg-card rounded-lg p-1.5 shrink-0">
+                <img src={aceEdxLogo} alt="AceEdX" className="h-10 w-auto" />
+              </div>
               <div>
                 <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
-                  Annual School Academic Calendar
+                  Annual School Academic Calendar <span className="text-accent">2027–28</span>
                 </h1>
-                <p className="text-primary-foreground/80 text-sm mt-0.5">
-                  by AceEdX • Academic Year 2026–27 • March 2026 to March 2027
+                <p className="text-primary-foreground/85 text-sm mt-0.5">
+                  by <span className="text-accent font-semibold">AceEdX</span> • March 2027 to May 2028 • with preparation months October 2026 – February 2027
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-primary-foreground/70 hidden sm:inline">
+              <span className="text-sm text-primary-foreground/70 hidden lg:inline">
                 {userEmail}
               </span>
               <Button
-                variant="secondary"
+                variant="brand"
                 size="sm"
                 onClick={() => {
                   setEditingEvent(null);
@@ -180,7 +182,7 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="sm" className="gap-1.5">
+                  <Button variant="onPrimary" size="sm" className="gap-1.5">
                     <Download className="w-4 h-4" />
                     Download
                   </Button>
@@ -188,29 +190,35 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => downloadCSV(events)}>
                     <FileText className="w-4 h-4 mr-2" />
-                    Download CSV
+                    Download CSV (all dates)
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => downloadPrintableHTML(events)}>
                     <Printer className="w-4 h-4 mr-2" />
-                    Print Calendar
+                    Print / Save as PDF
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <Button
-                variant="secondary"
+                variant="onPrimary"
                 size="sm"
-                onClick={resetToDefaults}
+                onClick={() => {
+                  if (window.confirm("Reset to the default 2027–28 calendar? Your own added events and edits will be removed.")) {
+                    resetToDefaults();
+                  }
+                }}
                 className="gap-1.5"
                 title="Reset to default events"
+                aria-label="Reset to default events"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
               <Button
-                variant="secondary"
+                variant="onPrimary"
                 size="sm"
                 onClick={onSignOut}
                 className="gap-1.5"
                 title="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut className="w-4 h-4" />
               </Button>
@@ -225,16 +233,16 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
           {allCategories.map((cat) => (
             <button
               key={cat}
-              className={`bg-card rounded-lg border p-2 sm:p-3 text-center transition-all cursor-pointer hover:shadow-md ${
+              className={`bg-card rounded-lg border border-t-4 p-2 sm:p-3 text-center transition-all cursor-pointer hover:shadow-md ${
                 selectedCategory === cat
-                  ? "border-primary ring-2 ring-primary/20"
-                  : "border-border hover:border-primary/40"
+                  ? "border-primary border-t-accent ring-2 ring-accent/40"
+                  : "border-border border-t-primary hover:border-t-accent"
               }`}
               onClick={() =>
                 setSelectedCategory((prev) => (prev === cat ? null : cat))
               }
             >
-              <div className="text-lg sm:text-xl font-bold text-foreground">
+              <div className="text-lg sm:text-xl font-bold text-primary">
                 {stats[cat]}
               </div>
               <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
