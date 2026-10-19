@@ -11,6 +11,7 @@ interface MonthCalendarProps {
   events: CalendarEvent[];
   onDayClick: (dateStr: string) => void;
   onEventClick: (event: CalendarEvent) => void;
+  isPreparation?: boolean;
 }
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -25,6 +26,7 @@ export default function MonthCalendar({
   events,
   onDayClick,
   onEventClick,
+  isPreparation = false,
 }: MonthCalendarProps) {
   const { weeks, monthName } = useMemo(() => {
     const firstDay = new Date(year, month, 1);
@@ -86,19 +88,24 @@ export default function MonthCalendar({
 
   return (
     <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden animate-fade-in">
-      <div className="bg-primary px-4 py-3 sm:px-6 sm:py-4">
+      <div className="bg-primary border-b-4 border-accent px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between gap-2">
         <h2 className="text-primary-foreground font-display text-lg sm:text-xl font-bold tracking-wide">
           {monthName}
         </h2>
+        {isPreparation && (
+          <span className="bg-accent text-accent-foreground text-[10px] sm:text-xs font-semibold uppercase tracking-wide rounded-full px-2.5 py-0.5 whitespace-nowrap">
+            Preparation month
+          </span>
+        )}
       </div>
 
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-border">
+      <div className="grid grid-cols-7 border-b border-border bg-primary/5">
         {DAY_NAMES.map((d, i) => (
           <div
             key={d}
             className={`text-center py-2 text-xs font-semibold uppercase tracking-wider ${
-              i === 0 ? "text-cal-sunday" : "text-muted-foreground"
+              i === 0 ? "text-cal-sunday bg-cal-sunday-bg" : "text-primary"
             }`}
           >
             {d}
@@ -117,8 +124,10 @@ export default function MonthCalendar({
                   cell.day === null
                     ? "bg-muted/30"
                     : cell.isToday
-                    ? "bg-cal-today-bg"
-                    : "hover:bg-muted/40 cursor-pointer"
+                    ? "bg-cal-today-bg cursor-pointer"
+                    : cell.isSunday
+                    ? "bg-cal-sunday-bg hover:bg-accent/20 cursor-pointer"
+                    : "hover:bg-primary/5 cursor-pointer"
                 }`}
                 onClick={() => cell.day && onDayClick(cell.dateStr)}
               >

@@ -16,8 +16,8 @@ import {
 const FEATURES = [
   {
     icon: Calendar,
-    title: "13 Months Covered",
-    desc: "March 2026 to March 2027 — complete academic year with Indian holidays, festivals & school events.",
+    title: "20 Months Covered",
+    desc: "Academic Year March 2027 – May 2028, plus preparation months from October 2026. Every date, Sunday, holiday and school event included.",
   },
   {
     icon: Pencil,
@@ -67,7 +67,7 @@ export default function Landing() {
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4" />
-              Academic Year 2026–27
+              Academic Year 2027–28
             </div>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
               Annual School
@@ -75,8 +75,8 @@ export default function Landing() {
             </h1>
             <p className="text-lg text-accent font-semibold mt-2">by AceEdX</p>
             <p className="text-lg sm:text-xl text-muted-foreground mt-6 max-w-2xl mx-auto">
-              100+ pre-loaded events — Indian holidays, sports tournaments, cultural fests, exams & club
-              activities. Fully customizable for your school.
+              230+ pre-loaded events — Indian national days, festivals, international & world days, sports,
+              competitions, exams & club activities. Fully customizable for your school.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
               <Button size="lg" className="gap-2 text-lg px-8 py-6" onClick={handleGetStarted}>
@@ -128,7 +128,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
             {[
               "All Indian national holidays",
-              "Major religious festivals",
+              "Major festivals & world days",
               "Sports tournaments & meets",
               "Club activities & workshops",
               "Examination schedules",
@@ -181,7 +181,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="bg-card border-t border-border py-6 text-center text-sm text-muted-foreground">
-        <p>📚 Annual School Academic Calendar by AceEdX — Academic Year 2026–27</p>
+        <p>📚 Annual School Academic Calendar by AceEdX — Academic Year 2027–28</p>
       </footer>
     </div>
   );

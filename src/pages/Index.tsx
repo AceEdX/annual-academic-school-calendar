@@ -7,7 +7,17 @@ import EventLegend from "@/components/EventLegend";
 import EventBadge from "@/components/EventBadge";
 import CategoryEventsPanel from "@/components/CategoryEventsPanel";
 import { downloadCSV, downloadPrintableHTML } from "@/utils/calendarExport";
+import { getCalendarMonths, MONTH_NAMES } from "@/utils/calendarRange";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 import {
   ChevronLeft,
@@ -33,21 +43,17 @@ interface IndexProps {
   onSignOut: () => void;
 }
 
-const MONTHS = [
-  { year: 2026, month: 2 }, // Mar 2026
-  { year: 2026, month: 3 }, // Apr
-  { year: 2026, month: 4 }, // May
-  { year: 2026, month: 5 }, // Jun
-  { year: 2026, month: 6 }, // Jul
-  { year: 2026, month: 7 }, // Aug
-  { year: 2026, month: 8 }, // Sep
-  { year: 2026, month: 9 }, // Oct
-  { year: 2026, month: 10 }, // Nov
-  { year: 2026, month: 11 }, // Dec
-  { year: 2027, month: 0 }, // Jan 2027
-  { year: 2027, month: 1 }, // Feb
-  { year: 2027, month: 2 }, // Mar 2027
-];
+const MONTHS = getCalendarMonths();
+const PREP_MONTHS = MONTHS.map((m, idx) => ({ ...m, idx })).filter((m) => m.isPreparation);
+const ACADEMIC_MONTHS = MONTHS.map((m, idx) => ({ ...m, idx })).filter((m) => !m.isPreparation);
+
+function initialMonthIdx() {
+  const now = new Date();
+  const idx = MONTHS.findIndex((m) => m.year === now.getFullYear() && m.month === now.getMonth());
+  return idx >= 0 ? idx : ACADEMIC_MONTHS[0].idx;
+}
+
+const monthLabel = (m: { year: number; month: number }) => `${MONTH_NAMES[m.month]} ${m.year}`;
 
 const allCategories: EventCategory[] = [
   "holiday", "sports", "academic", "cultural", "club", "exam", "general",
@@ -63,7 +69,7 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
     getEventsForMonth,
   } = useCalendarEvents();
 
-  const [currentMonthIdx, setCurrentMonthIdx] = useState(0);
+  const [currentMonthIdx, setCurrentMonthIdx] = useState(initialMonthIdx);
   const [activeFilters, setActiveFilters] = useState<Set<EventCategory>>(
     new Set(allCategories)
   );
@@ -134,33 +140,34 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
     const monthEvents = getEventsForMonth(currentMonth.year, currentMonth.month);
     return monthEvents
       .filter((e) => activeFilters.has(e.category))
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, 8);
+      .sort((a, b) => a.date.localeCompare(b.date));
   }, [currentMonth, getEventsForMonth, activeFilters]);
 
   return (
     <div className="min-h-screen bg-background font-body">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground">
+      <header className="bg-primary text-primary-foreground border-b-4 border-accent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <img src={aceEdxLogo} alt="AceEdX" className="h-12 w-auto" />
+              <div className="bg-card rounded-lg p-1.5 shrink-0">
+                <img src={aceEdxLogo} alt="AceEdX" className="h-10 w-auto" />
+              </div>
               <div>
                 <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
-                  Annual School Academic Calendar
+                  Annual School Academic Calendar <span className="text-accent">2027–28</span>
                 </h1>
-                <p className="text-primary-foreground/80 text-sm mt-0.5">
-                  by AceEdX • Academic Year 2026–27 • March 2026 to March 2027
+                <p className="text-primary-foreground/85 text-sm mt-0.5">
+                  by <span className="text-accent font-semibold">AceEdX</span> • March 2027 to May 2028 • with preparation months October 2026 – February 2027
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-primary-foreground/70 hidden sm:inline">
+              <span className="text-sm text-primary-foreground/70 hidden lg:inline">
                 {userEmail}
               </span>
               <Button
-                variant="secondary"
+                variant="brand"
                 size="sm"
                 onClick={() => {
                   setEditingEvent(null);
@@ -174,7 +181,7 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="sm" className="gap-1.5">
+                  <Button variant="onPrimary" size="sm" className="gap-1.5">
                     <Download className="w-4 h-4" />
                     Download
                   </Button>
@@ -182,29 +189,35 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => downloadCSV(events)}>
                     <FileText className="w-4 h-4 mr-2" />
-                    Download CSV
+                    Download CSV (all dates)
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => downloadPrintableHTML(events)}>
                     <Printer className="w-4 h-4 mr-2" />
-                    Print Calendar
+                    Print / Save as PDF
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <Button
-                variant="secondary"
+                variant="onPrimary"
                 size="sm"
-                onClick={resetToDefaults}
+                onClick={() => {
+                  if (window.confirm("Reset to the default 2027–28 calendar? Your own added events and edits will be removed.")) {
+                    resetToDefaults();
+                  }
+                }}
                 className="gap-1.5"
                 title="Reset to default events"
+                aria-label="Reset to default events"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
               <Button
-                variant="secondary"
+                variant="onPrimary"
                 size="sm"
                 onClick={onSignOut}
                 className="gap-1.5"
                 title="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut className="w-4 h-4" />
               </Button>
@@ -219,16 +232,16 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
           {allCategories.map((cat) => (
             <button
               key={cat}
-              className={`bg-card rounded-lg border p-2 sm:p-3 text-center transition-all cursor-pointer hover:shadow-md ${
+              className={`bg-card rounded-lg border border-t-4 p-2 sm:p-3 text-center transition-all cursor-pointer hover:shadow-md ${
                 selectedCategory === cat
-                  ? "border-primary ring-2 ring-primary/20"
-                  : "border-border hover:border-primary/40"
+                  ? "border-primary border-t-accent ring-2 ring-accent/40"
+                  : "border-border border-t-primary hover:border-t-accent"
               }`}
               onClick={() =>
                 setSelectedCategory((prev) => (prev === cat ? null : cat))
               }
             >
-              <div className="text-lg sm:text-xl font-bold text-foreground">
+              <div className="text-lg sm:text-xl font-bold text-primary">
                 {stats[cat]}
               </div>
               <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
@@ -261,13 +274,13 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
         </div>
 
         {/* View toggle + Navigation */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-1 bg-primary/10 rounded-lg p-1">
             <button
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 viewMode === "month"
-                  ? "bg-card shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-primary hover:bg-primary/10"
               }`}
               onClick={() => setViewMode("month")}
             >
@@ -277,8 +290,8 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
             <button
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 viewMode === "year"
-                  ? "bg-card shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-primary hover:bg-primary/10"
               }`}
               onClick={() => setViewMode("year")}
             >
@@ -294,22 +307,44 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
                 size="icon"
                 onClick={handlePrev}
                 disabled={currentMonthIdx === 0}
-                className="h-8 w-8"
+                className="h-9 w-9"
+                aria-label="Previous month"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="text-sm font-medium text-foreground min-w-[120px] text-center">
-                {new Date(currentMonth.year, currentMonth.month).toLocaleDateString("en-IN", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
+              <Select
+                value={String(currentMonthIdx)}
+                onValueChange={(v) => setCurrentMonthIdx(Number(v))}
+              >
+                <SelectTrigger className="w-[190px] h-9 font-medium" aria-label="Jump to month">
+                  <SelectValue>{monthLabel(currentMonth)}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Preparation months</SelectLabel>
+                    {PREP_MONTHS.map((m) => (
+                      <SelectItem key={m.idx} value={String(m.idx)}>
+                        {monthLabel(m)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Academic Year 2027–28</SelectLabel>
+                    {ACADEMIC_MONTHS.map((m) => (
+                      <SelectItem key={m.idx} value={String(m.idx)}>
+                        {monthLabel(m)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={handleNext}
                 disabled={currentMonthIdx === MONTHS.length - 1}
-                className="h-8 w-8"
+                className="h-9 w-9"
+                aria-label="Next month"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -326,20 +361,24 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
                 events={filteredEventsForMonth}
                 onDayClick={handleDayClick}
                 onEventClick={handleEventClick}
+                isPreparation={currentMonth.isPreparation}
               />
             </div>
 
             <div className="lg:col-span-1">
-              <div className="bg-card rounded-xl border border-border p-4 sticky top-6">
-                <h3 className="font-display text-lg font-bold text-foreground mb-3">
+              <div className="bg-card rounded-xl border border-border border-t-4 border-t-accent p-4 sticky top-6">
+                <h3 className="font-display text-lg font-bold text-primary mb-1">
                   Events This Month
                 </h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {upcomingEvents.length} event{upcomingEvents.length !== 1 ? "s" : ""} in {monthLabel(currentMonth)}
+                </p>
                 {upcomingEvents.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     No events this month with selected filters.
                   </p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
                     {upcomingEvents.map((evt) => (
                       <div key={evt.id} className="animate-slide-in">
                         <div className="text-[10px] text-muted-foreground mb-0.5 uppercase tracking-wide">
@@ -358,35 +397,66 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {MONTHS.map((m, idx) => {
-              const monthEvents = getEventsForMonth(m.year, m.month).filter((e) =>
-                activeFilters.has(e.category)
-              );
-              return (
-                <div key={idx}>
-                  <MonthCalendar
-                    year={m.year}
-                    month={m.month}
-                    events={monthEvents}
-                    onDayClick={handleDayClick}
-                    onEventClick={handleEventClick}
-                  />
+          <div className="space-y-10">
+            {[
+              {
+                title: "Preparation Months",
+                subtitle: "October 2026 – February 2027 • plan, consult and get ready for the new session",
+                months: PREP_MONTHS,
+              },
+              {
+                title: "Academic Year 2027–28",
+                subtitle: "March 2027 – May 2028",
+                months: ACADEMIC_MONTHS,
+              },
+            ].map((section) => (
+              <section key={section.title}>
+                <div className="mb-4 border-l-4 border-accent pl-3">
+                  <h2 className="font-display text-2xl font-bold text-primary">{section.title}</h2>
+                  <p className="text-sm text-muted-foreground">{section.subtitle}</p>
                 </div>
-              );
-            })}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {section.months.map((m) => {
+                    const monthEvents = getEventsForMonth(m.year, m.month).filter((e) =>
+                      activeFilters.has(e.category)
+                    );
+                    return (
+                      <MonthCalendar
+                        key={m.idx}
+                        year={m.year}
+                        month={m.month}
+                        events={monthEvents}
+                        onDayClick={handleDayClick}
+                        onEventClick={handleEventClick}
+                        isPreparation={m.isPreparation}
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         )}
 
         <footer className="mt-12 text-center text-sm text-muted-foreground pb-8">
           <p>
             Click any date to add your school's custom events • Click any event to edit or delete •{" "}
-            <button onClick={resetToDefaults} className="underline hover:text-foreground">
+            <button
+              onClick={() => {
+                if (window.confirm("Reset to the default 2027–28 calendar? Your own added events and edits will be removed.")) {
+                  resetToDefaults();
+                }
+              }}
+              className="underline hover:text-foreground"
+            >
               Reset to defaults
             </button>
           </p>
           <p className="mt-1">
-            📚 Annual School Academic Calendar by AceEdX — Academic Year 2026–27
+            Festival dates marked tentative or regional should be confirmed with your state's official holiday list.
+          </p>
+          <p className="mt-1">
+            📚 Annual School Academic Calendar by AceEdX — Academic Year 2027–28
           </p>
         </footer>
       </main>

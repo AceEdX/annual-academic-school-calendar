@@ -103,15 +103,15 @@ serve(async (req) => {
         subject: "Your Free Annual School Academic Calendar 📚",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h1 style="color: #1a1a2e; font-size: 24px;">Hi ${displayName}! 👋</h1>
+            <h1 style="color: #1e4fa8; font-size: 24px;">Hi ${displayName}! 👋</h1>
             <p style="color: #444; font-size: 16px; line-height: 1.6;">
-              Thank you for signing up! Your <strong>Annual School Academic Calendar (2026–27)</strong> is ready to use.
+              Thank you for signing up! Your <strong>Annual School Academic Calendar (2027–28)</strong> is ready to use.
             </p>
             <p style="color: #444; font-size: 16px; line-height: 1.6;">
               Access your calendar anytime by clicking the link below. You can customize events, download as CSV, or print it for your school.
             </p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${calendarLink}" style="background-color: #6366f1; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold;">
+              <a href="${calendarLink}" style="background-color: #1e4fa8; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold;">
                 Open My Calendar
               </a>
             </div>
@@ -120,7 +120,7 @@ serve(async (req) => {
             </p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
             <p style="color: #aaa; font-size: 12px; text-align: center;">
-              📚 Annual School Academic Calendar by AceEdX — Academic Year 2026–27
+              📚 Annual School Academic Calendar by AceEdX — Academic Year 2027–28
             </p>
           </div>
         `,
