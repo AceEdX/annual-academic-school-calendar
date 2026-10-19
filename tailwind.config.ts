@@ -77,6 +77,7 @@ export default {
           general: "hsl(var(--cal-general))",
           "general-bg": "hsl(var(--cal-general-bg))",
           sunday: "hsl(var(--cal-sunday))",
+          "sunday-bg": "hsl(var(--cal-sunday-bg))",
           today: "hsl(var(--cal-today))",
           "today-bg": "hsl(var(--cal-today-bg))",
         },

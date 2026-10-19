@@ -24,34 +24,35 @@
     --muted: 210 20% 95%;
     --muted-foreground: 210 12% 50%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 47 100% 52%;
+    --accent-foreground: 222 70% 18%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 18% 89%;
-    --input: 210 18% 89%;
+    --border: 214 35% 88%;
+    --input: 214 35% 88%;
     --ring: 215 65% 42%;
 
     --radius: 0.625rem;
 
-    /* Calendar-specific tokens */
-    --cal-holiday: 0 72% 51%;
-    --cal-holiday-bg: 0 72% 96%;
-    --cal-sports: 142 60% 40%;
-    --cal-sports-bg: 142 60% 94%;
-    --cal-academic: 217 70% 50%;
-    --cal-academic-bg: 217 70% 95%;
-    --cal-cultural: 270 60% 55%;
-    --cal-cultural-bg: 270 60% 95%;
-    --cal-club: 38 92% 50%;
-    --cal-club-bg: 38 92% 94%;
-    --cal-exam: 340 65% 50%;
-    --cal-exam-bg: 340 65% 95%;
-    --cal-general: 215 65% 42%;
-    --cal-general-bg: 215 65% 94%;
-    --cal-sunday: 0 60% 55%;
+    /* Calendar-specific tokens — AceEdX blue, white & yellow */
+    --cal-holiday: 222 70% 18%;
+    --cal-holiday-bg: 47 100% 70%;
+    --cal-sports: 199 85% 34%;
+    --cal-sports-bg: 199 90% 92%;
+    --cal-academic: 217 75% 42%;
+    --cal-academic-bg: 217 85% 94%;
+    --cal-cultural: 32 90% 36%;
+    --cal-cultural-bg: 42 100% 91%;
+    --cal-club: 42 85% 30%;
+    --cal-club-bg: 52 100% 90%;
+    --cal-exam: 0 0% 100%;
+    --cal-exam-bg: 222 65% 30%;
+    --cal-general: 215 35% 35%;
+    --cal-general-bg: 214 40% 93%;
+    --cal-sunday: 38 95% 36%;
+    --cal-sunday-bg: 50 100% 96%;
     --cal-today: 215 65% 42%;
     --cal-today-bg: 215 65% 94%;
 

@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { CalendarEvent, EventCategory, categoryLabels, categoryIcons } from "@/data/calendarData";
+import {
+  CalendarEvent,
+  EventCategory,
+  categoryLabels,
+  categoryIcons,
+  CALENDAR_START,
+  CALENDAR_END,
+} from "@/data/calendarData";
 import {
   Dialog,
   DialogContent,
@@ -97,8 +104,8 @@ export default function EventModal({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              min="2026-03-01"
-              max="2027-03-31"
+              min={CALENDAR_START}
+              max={CALENDAR_END}
               required
             />
           </div>
