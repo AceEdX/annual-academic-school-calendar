@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792673890752,
+      "tag": "0000_save_signup_details_to_profiles",
+      "breakpoints": true
+    }
+  ]
+}
