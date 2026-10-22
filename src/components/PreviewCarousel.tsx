@@ -2,37 +2,37 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import previewCalendarMonth from "@/assets/preview-calendar-month.png";
-import previewCalendarSeptember from "@/assets/preview-calendar-september.png";
-import previewAddEvent from "@/assets/preview-add-event.png";
-import previewYearOverview from "@/assets/preview-year-overview.png";
-import previewTableList from "@/assets/preview-table-list.png";
+import previewMonth from "@/assets/preview-2027-month.jpg";
+import previewPrep from "@/assets/preview-2027-prep.jpg";
+import previewYear from "@/assets/preview-2027-year.jpg";
+import previewEdit from "@/assets/preview-2027-edit.jpg";
+import previewCategory from "@/assets/preview-2027-category.jpg";
 
 const SCREENSHOTS = [
   {
-    title: "Month Calendar View",
-    desc: "Color-coded events on a clean calendar grid with category stats at a glance",
-    img: previewCalendarMonth,
+    title: "Academic Year 2027–28",
+    desc: "March 2027 to May 2028 with every date, Sunday, holiday and school event",
+    img: previewMonth,
   },
   {
-    title: "Events & Sidebar",
-    desc: "Browse events month by month with a detailed sidebar listing all activities",
-    img: previewCalendarSeptember,
+    title: "Preparation Months",
+    desc: "October 2026 to February 2027 to plan and get ready for the new session",
+    img: previewPrep,
+  },
+  {
+    title: "Year View",
+    desc: "All 20 months from October 2026 to May 2028 at a glance",
+    img: previewYear,
   },
   {
     title: "Add & Edit Events",
-    desc: "Easily add new events with title, date, category, and description",
-    img: previewAddEvent,
+    desc: "Edit any event with its details already filled in, or add your own school events",
+    img: previewEdit,
   },
   {
-    title: "Year Overview",
-    desc: "All 13 months displayed in a compact grid — see the full academic year at once",
-    img: previewYearOverview,
-  },
-  {
-    title: "Table / List View",
-    desc: "View all events in a sortable table with date, category, and description",
-    img: previewTableList,
+    title: "Events by Category",
+    desc: "Tap a category to see and edit every holiday, exam, sport and club activity",
+    img: previewCategory,
   },
 ];
 
