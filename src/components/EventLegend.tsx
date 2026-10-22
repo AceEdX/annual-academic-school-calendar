@@ -16,7 +16,7 @@ const categoryDotColors: Record<EventCategory, string> = {
   academic: "bg-cal-academic",
   cultural: "bg-cal-cultural",
   club: "bg-cal-club",
-  exam: "bg-cal-exam",
+  exam: "bg-cal-exam-bg",
   general: "bg-cal-general",
 };
 
