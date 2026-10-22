@@ -48,7 +48,19 @@ export default function Auth() {
 
     try {
       if (mode === "signup") {
-        const { error } = await signUp(emailResult.data, password, fullName);
+        const nameResult = nameSchema.safeParse(fullName);
+        if (!nameResult.success) {
+          toast({ title: "Please enter your name", description: nameResult.error.errors[0].message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        const phoneResult = phoneSchema.safeParse(phone);
+        if (!phoneResult.success) {
+          toast({ title: "Invalid phone number", description: phoneResult.error.errors[0].message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        const { error } = await signUp(emailResult.data, password, nameResult.data, phoneResult.data);
         if (error) {
           console.error("Sign up error:", error.message);
           const msg = error.message.includes("already registered")
@@ -59,14 +71,6 @@ export default function Auth() {
           toast({ title: "Sign up failed", description: msg, variant: "destructive" });
         } else {
           toast({ title: "Welcome! 🎉", description: "Your account has been created. Enjoy your free calendar!" });
-          // Send calendar link email (best-effort)
-          try {
-            await supabase.functions.invoke("send-calendar-email", {
-              body: { email: emailResult.data, name: fullName },
-            });
-          } catch {
-            // Non-critical
-          }
         }
       } else {
         const { error } = await signIn(emailResult.data, password);
