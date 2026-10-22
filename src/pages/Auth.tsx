@@ -115,27 +115,46 @@ export default function Auth() {
             <p className="text-muted-foreground mt-2">
               {mode === "login"
                 ? "Sign in to access the Annual School Academic Calendar"
-                : "Sign up to purchase the Annual School Academic Calendar"}
+                : "Sign up free to access the Annual School Academic Calendar 2027–28"}
             </p>
           </div>
 
           <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "signup" && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="name"
-                      placeholder="Your full name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10"
-                      maxLength={100}
-                    />
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="name"
+                        placeholder="Your full name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="pl-10"
+                        maxLength={100}
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="Your phone number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="pl-10"
+                        maxLength={15}
+                        required
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="space-y-2">
