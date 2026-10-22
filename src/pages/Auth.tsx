@@ -1,26 +1,31 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 
 const emailSchema = z.string().trim().email("Please enter a valid email address").max(255);
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters").max(72);
+const nameSchema = z.string().trim().min(1, "Name is required").max(100);
+const phoneSchema = z
+  .string()
+  .trim()
+  .regex(/^\+?[0-9\s-]{7,15}$/, "Please enter a valid phone number");
 
 export default function Auth() {
-  const { user, loading, signIn, signUp } = useAuth();
+  const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup">("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -48,7 +53,19 @@ export default function Auth() {
 
     try {
       if (mode === "signup") {
-        const { error } = await signUp(emailResult.data, password, fullName);
+        const nameResult = nameSchema.safeParse(fullName);
+        if (!nameResult.success) {
+          toast({ title: "Please enter your name", description: nameResult.error.errors[0].message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        const phoneResult = phoneSchema.safeParse(phone);
+        if (!phoneResult.success) {
+          toast({ title: "Invalid phone number", description: phoneResult.error.errors[0].message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        const { error } = await signUp(emailResult.data, password, nameResult.data, phoneResult.data);
         if (error) {
           console.error("Sign up error:", error.message);
           const msg = error.message.includes("already registered")
@@ -59,14 +76,6 @@ export default function Auth() {
           toast({ title: "Sign up failed", description: msg, variant: "destructive" });
         } else {
           toast({ title: "Welcome! 🎉", description: "Your account has been created. Enjoy your free calendar!" });
-          // Send calendar link email (best-effort)
-          try {
-            await supabase.functions.invoke("send-calendar-email", {
-              body: { email: emailResult.data, name: fullName },
-            });
-          } catch {
-            // Non-critical
-          }
         }
       } else {
         const { error } = await signIn(emailResult.data, password);
@@ -106,27 +115,46 @@ export default function Auth() {
             <p className="text-muted-foreground mt-2">
               {mode === "login"
                 ? "Sign in to access the Annual School Academic Calendar"
-                : "Sign up to purchase the Annual School Academic Calendar"}
+                : "Sign up free to access the Annual School Academic Calendar 2027–28"}
             </p>
           </div>
 
           <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "signup" && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="name"
-                      placeholder="Your full name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10"
-                      maxLength={100}
-                    />
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="name"
+                        placeholder="Your full name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="pl-10"
+                        maxLength={100}
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="Your phone number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="pl-10"
+                        maxLength={15}
+                        required
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="space-y-2">
