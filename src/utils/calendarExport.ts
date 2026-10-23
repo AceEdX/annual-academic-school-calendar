@@ -100,6 +100,7 @@ export function generatePrintableHTML(events: CalendarEvent[], schoolName?: stri
   body { font-family: 'DM Sans', sans-serif; padding: 24px; color: #0f1f3d; background: #fff; }
   h1 { font-family: 'Playfair Display', serif; text-align: center; font-size: 28px; margin-bottom: 6px; color: #1e4fa8; }
   .subtitle { text-align: center; color: #555; font-size: 14px; margin-bottom: 4px; }
+  .school { text-align: center; font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: #0f1f4d; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 3px solid #facc15; }
   .brand-bar { height: 6px; background: linear-gradient(90deg, #1e4fa8 0 70%, #facc15 70% 100%); border-radius: 3px; margin: 14px 0 20px; }
   .section-title { font-family: 'Playfair Display', serif; font-size: 22px; color: #1e4fa8; margin: 28px 0 6px; }
   .month-title { font-size: 16px; font-weight: 700; color: #fff; background: #1e4fa8; border-left: 6px solid #facc15; padding: 6px 10px; margin: 18px 0 0; }
@@ -119,8 +120,8 @@ export function generatePrintableHTML(events: CalendarEvent[], schoolName?: stri
 </style>
 </head>
 <body>
+${schoolName?.trim() ? `<p class="school">${escapeHtml(schoolName.trim())}</p>` : ""}
 <h1>Annual School Academic Calendar 2027–28</h1>
-${schoolName ? `<p class="subtitle"><strong>${escapeHtml(schoolName)}</strong></p>` : ""}
 <p class="subtitle">Academic Year: March 2027 – May 2028 • Preparation months: October 2026 – February 2027</p>
 <p class="subtitle">by AceEdX</p>
 <div class="brand-bar"></div>
@@ -278,6 +279,7 @@ export function generateMonthGridHTML(
   .page { border: 1px solid hsl(214 32% 85%); border-radius: 12px; overflow: hidden; margin: 0 auto 24px; max-width: 1100px; }
   .page + .page { break-before: page; }
   .brand { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 14px; font-size: 11px; color: hsl(215 65% 42%); background: hsl(215 65% 97%); }
+  .school { text-align: center; font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: hsl(222 70% 18%); padding: 10px 14px 8px; border-bottom: 3px solid hsl(47 100% 52%); }
   .brand strong { font-family: 'Playfair Display', serif; font-size: 13px; }
   .head { background: hsl(215 65% 42%); border-bottom: 4px solid hsl(47 100% 52%); color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
   .head h2 { font-family: 'Playfair Display', serif; font-size: 22px; letter-spacing: .3px; }
@@ -326,9 +328,8 @@ export function generateMonthGridHTML(
     for (let i = 0; i < cells.length; i += 7) rows += `<tr>${cells.slice(i, i + 7).join("")}</tr>`;
 
     html += `<section class="page">
-  <div class="brand"><strong>Annual School Academic Calendar 2027–28</strong><span>${
-    schoolName ? `${escapeHtml(schoolName)} • ` : ""
-  }by AceEdX</span></div>
+  ${schoolName?.trim() ? `<div class="school">${escapeHtml(schoolName.trim())}</div>` : ""}
+  <div class="brand"><strong>Annual School Academic Calendar 2027–28</strong><span>by AceEdX</span></div>
   <div class="head"><h2>${MONTHS_LONG[m.month]} ${m.year}</h2>${
       m.isPreparation ? '<span class="tag">Preparation month</span>' : '<span class="tag">Academic Year 2027–28</span>'
     }</div>
