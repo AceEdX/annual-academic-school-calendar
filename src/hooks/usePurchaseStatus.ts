@@ -9,7 +9,7 @@ export function usePurchaseStatus(userId: string | undefined) {
     if (!userId) {
       setHasPaid(false);
       setLoading(false);
-      return;
+      return false;
     }
 
     setLoading(true);
@@ -20,17 +20,38 @@ export function usePurchaseStatus(userId: string | undefined) {
       .eq("payment_status", "paid")
       .limit(1);
 
-    if (!error && data && data.length > 0) {
-      setHasPaid(true);
-    } else {
-      setHasPaid(false);
-    }
+    const paid = !error && !!data && data.length > 0;
+    setHasPaid(paid);
     setLoading(false);
+    return paid;
+  }, [userId]);
+
+  // Asks the server to confirm a payment directly with Razorpay
+  // (covers payments where the browser closed before confirmation).
+  const recoverPayment = useCallback(async () => {
+    if (!userId) return false;
+    try {
+      const { data, error } = await supabase.functions.invoke("check-payment-status");
+      if (!error && data?.verified) {
+        setHasPaid(true);
+        return true;
+      }
+    } catch {
+      // ignore — user can retry
+    }
+    return false;
   }, [userId]);
 
   useEffect(() => {
-    checkPurchase();
-  }, [checkPurchase]);
+    let cancelled = false;
+    (async () => {
+      const paid = await checkPurchase();
+      if (!paid && !cancelled) await recoverPayment();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [checkPurchase, recoverPayment]);
 
-  return { hasPaid, loading, refetch: checkPurchase };
+  return { hasPaid, loading, refetch: checkPurchase, recoverPayment };
 }
