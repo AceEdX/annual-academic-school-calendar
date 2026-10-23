@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, User, ArrowLeft, Phone } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft, Phone, Eye, EyeOff } from "lucide-react";
+import { getAuthErrorInfo } from "@/utils/authErrors";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
@@ -27,6 +28,7 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -68,12 +70,12 @@ export default function Auth() {
         const { error } = await signUp(emailResult.data, password, nameResult.data, phoneResult.data);
         if (error) {
           console.error("Sign up error:", error.message);
-          const msg = error.message.includes("already registered")
-            ? "This email is already registered. Please log in instead."
-            : error.message.includes("fetch") 
-              ? "Network error. Please check your connection and try again."
-              : "Sign up failed. Please try again later.";
-          toast({ title: "Sign up failed", description: msg, variant: "destructive" });
+          const info = getAuthErrorInfo(error, "signup");
+          toast({ title: info.title, description: info.description, variant: "destructive" });
+          if (info.switchToLogin) {
+            setMode("login");
+            setPassword("");
+          }
         } else {
           toast({ title: "Welcome! 🎉", description: "Your account has been created. Your calendar is ready." });
         }
@@ -81,10 +83,8 @@ export default function Auth() {
         const { error } = await signIn(emailResult.data, password);
         if (error) {
           console.error("Login error:", error.message);
-          const msg = error.message.includes("fetch")
-            ? "Network error. Please check your connection and try again."
-            : "Invalid email or password. Please try again.";
-          toast({ title: "Login failed", description: msg, variant: "destructive" });
+          const info = getAuthErrorInfo(error, "login");
+          toast({ title: info.title, description: info.description, variant: "destructive" });
         }
       }
     } catch (err) {
@@ -179,14 +179,29 @@ export default function Auth() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="At least 6 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 pr-10"
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
+                {mode === "signup" && (
+                  <p className="text-xs text-muted-foreground">
+                    Avoid common passwords like "password123" — they are blocked for your safety.
+                  </p>
+                )}
               </div>
 
               <Button type="submit" className="w-full" disabled={submitting}>
