@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import aceEdxLogo from "@/assets/Ace_EduX_Logo_3.png";
 import { Button } from "@/components/ui/button";
 import PreviewCarousel from "@/components/PreviewCarousel";
+import { CALENDAR_PRICE_INR } from "@/data/pricing";
 import {
   Calendar,
   Download,
@@ -55,7 +56,7 @@ export default function Landing() {
           </div>
           <Button size="sm" onClick={handleGetStarted} className="gap-1.5">
             <Download className="w-4 h-4" />
-            Free Download
+            Download
           </Button>
         </div>
       </nav>
@@ -81,11 +82,11 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
               <Button size="lg" className="gap-2 text-lg px-8 py-6" onClick={handleGetStarted}>
                 <Download className="w-5 h-5" />
-                Free Download
+                Download
               </Button>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <ShieldCheck className="w-4 h-4 text-primary" />
-                100% Free — No payment required
+                Introductory price — only ₹{CALENDAR_PRICE_INR}
               </div>
             </div>
           </div>
@@ -123,7 +124,7 @@ export default function Landing() {
       <section className="py-12 sm:py-16 bg-muted/50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-8">
-            What's Included — Completely Free
+            What's Included
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
             {[
@@ -165,7 +166,7 @@ export default function Landing() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="font-display text-3xl sm:text-4xl font-bold">Ready to Get Started?</h2>
           <p className="mt-4 text-primary-foreground/80 text-lg">
-            Get your complete school calendar for free. Customize it for your school in minutes.
+            Customize your complete school calendar in minutes. Download and print it for an introductory price of just ₹{CALENDAR_PRICE_INR}.
           </p>
           <Button
             size="lg"
@@ -174,7 +175,7 @@ export default function Landing() {
             onClick={handleGetStarted}
           >
             <Download className="w-5 h-5" />
-            Free Download
+            Download
           </Button>
         </div>
       </section>
