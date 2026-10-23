@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { IndianRupee, Phone, ShieldCheck, User as UserIcon } from "lucide-react";
 import { z } from "zod";
 import { CALENDAR_PRICE_INR } from "@/data/pricing";
+import { friendlyPaymentError } from "@/utils/paymentErrors";
 
 const formSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -122,13 +123,19 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
                 },
               }
             );
-            if (verifyError || !verifyData?.success) throw new Error("verify");
+            let confirmed = !verifyError && !!verifyData?.success;
+            if (!confirmed) {
+              // Fallback: ask the server to confirm directly with Razorpay.
+              const { data: recovered } = await supabase.functions.invoke("check-payment-status");
+              confirmed = !!recovered?.verified;
+            }
+            if (!confirmed) throw new Error("verify");
             toast({ title: "Payment successful! 🎉", description: "Downloads and printing are now unlocked." });
             onSuccess();
           } catch {
             toast({
-              title: "We couldn't confirm your payment",
-              description: "If money was taken, please refresh the page in a minute or contact AceEdX with your payment ID.",
+              title: "We couldn't confirm your payment yet",
+              description: "If money was taken, refresh this page in a minute — downloads unlock automatically. Otherwise contact AceEdX with your payment ID.",
               variant: "destructive",
             });
           } finally {
@@ -143,8 +150,8 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
 
       razorpay.on("payment.failed", (response: any) => {
         toast({
-          title: "Payment failed",
-          description: response?.error?.description || "Something went wrong. Please try again.",
+          title: "Payment didn't go through",
+          description: friendlyPaymentError(response?.error),
           variant: "destructive",
         });
       });
