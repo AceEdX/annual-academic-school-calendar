@@ -1,5 +1,12 @@
 import { CalendarEvent, categoryLabels, categoryIcons } from "@/data/calendarData";
-import { getAllCalendarDates, getCalendarMonths, isPreparationDate, toDateStr, weekdayOf } from "./calendarRange";
+import {
+  CalendarMonth,
+  getAllCalendarDates,
+  getCalendarMonths,
+  isPreparationDate,
+  toDateStr,
+  weekdayOf,
+} from "./calendarRange";
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -164,8 +171,8 @@ ${schoolName ? `<p class="subtitle"><strong>${escapeHtml(schoolName)}</strong></
   return html;
 }
 
-export function downloadPrintableHTML(events: CalendarEvent[], schoolName?: string) {
-  const html = generatePrintableHTML(events, schoolName);
+/** Opens printable HTML in a new tab and starts printing; downloads the file if pop-ups are blocked. */
+function openPrintable(html: string, filename: string) {
   const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const w = window.open(url, "_blank");
@@ -174,12 +181,176 @@ export function downloadPrintableHTML(events: CalendarEvent[], schoolName?: stri
       setTimeout(() => w.print(), 500);
     };
   } else {
-    // Pop-up blocked: download the printable file instead
     const link = document.createElement("a");
     link.href = url;
-    link.download = "aceedx-school-calendar-2027-28.html";
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     link.remove();
   }
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+/** Saves printable HTML as a file without opening the print dialog. */
+function saveHTMLFile(html: string, filename: string) {
+  const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+}
+
+export function downloadPrintableHTML(events: CalendarEvent[], schoolName?: string) {
+  openPrintable(generatePrintableHTML(events, schoolName), "aceedx-school-calendar-2027-28.html");
+}
+
+// ---------- Month-wise grid calendars (same design as the on-screen month view) ----------
+
+const gridColors: Record<string, { fg: string; bg: string }> = {
+  holiday: { fg: "hsl(222 70% 18%)", bg: "hsl(47 100% 70%)" },
+  sports: { fg: "hsl(199 85% 34%)", bg: "hsl(199 90% 92%)" },
+  academic: { fg: "hsl(217 75% 42%)", bg: "hsl(217 85% 94%)" },
+  cultural: { fg: "hsl(32 90% 36%)", bg: "hsl(42 100% 91%)" },
+  club: { fg: "hsl(42 85% 30%)", bg: "hsl(52 100% 90%)" },
+  exam: { fg: "hsl(0 0% 100%)", bg: "hsl(222 65% 30%)" },
+  general: { fg: "hsl(215 35% 35%)", bg: "hsl(214 40% 93%)" },
+};
+
+const GRID_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const monthSlug = (m: CalendarMonth) => `${MONTHS_SHORT[m.month].toLowerCase()}-${m.year}`;
+
+/** File name for a month-wise download, e.g. aceedx-calendar-mar-2027.html or ...-mar-2027-to-may-2027.html */
+export function monthGridFilename(months: CalendarMonth[]) {
+  if (months.length === 0) return "aceedx-calendar.html";
+  const first = monthSlug(months[0]);
+  const last = monthSlug(months[months.length - 1]);
+  return first === last ? `aceedx-calendar-${first}.html` : `aceedx-calendar-${first}-to-${last}.html`;
+}
+
+/** Months from one calendar month index to another (inclusive, any order). */
+export function getMonthRange(fromIdx: number, toIdx: number): CalendarMonth[] {
+  const all = getCalendarMonths();
+  const start = Math.max(0, Math.min(fromIdx, toIdx));
+  const end = Math.min(all.length - 1, Math.max(fromIdx, toIdx));
+  return all.slice(start, end + 1);
+}
+
+/** One page per month, laid out as a 7-day grid with every event written out in full. */
+export function generateMonthGridHTML(
+  events: CalendarEvent[],
+  months: CalendarMonth[],
+  schoolName?: string
+): string {
+  const byDate = groupByDate(events);
+  const rangeLabel =
+    months.length === 0
+      ? ""
+      : months.length === 1
+      ? `${MONTHS_LONG[months[0].month]} ${months[0].year}`
+      : `${MONTHS_LONG[months[0].month]} ${months[0].year} – ${MONTHS_LONG[months[months.length - 1].month]} ${
+          months[months.length - 1].year
+        }`;
+
+  const legend = Object.keys(gridColors)
+    .map(
+      (cat) =>
+        `<span class="lg"><span class="sw" style="background:${gridColors[cat].bg};border-color:${gridColors[cat].fg}"></span>${
+          categoryIcons[cat as keyof typeof categoryIcons]
+        } ${categoryLabels[cat as keyof typeof categoryLabels]}</span>`
+    )
+    .join("");
+
+  let html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>AceEdX School Calendar – ${escapeHtml(rangeLabel)}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; color: hsl(222 47% 11%); background: #fff; padding: 16px; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { border: 1px solid hsl(214 32% 85%); border-radius: 12px; overflow: hidden; margin: 0 auto 24px; max-width: 1100px; }
+  .page + .page { break-before: page; }
+  .brand { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 14px; font-size: 11px; color: hsl(215 65% 42%); background: hsl(215 65% 97%); }
+  .brand strong { font-family: 'Playfair Display', serif; font-size: 13px; }
+  .head { background: hsl(215 65% 42%); border-bottom: 4px solid hsl(47 100% 52%); color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .head h2 { font-family: 'Playfair Display', serif; font-size: 22px; letter-spacing: .3px; }
+  .tag { background: hsl(47 100% 52%); color: hsl(222 70% 18%); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; border-radius: 999px; padding: 3px 10px; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th { background: hsl(215 65% 96%); color: hsl(215 65% 42%); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; padding: 6px 0; border: 1px solid hsl(214 32% 88%); }
+  th.sun { color: hsl(38 95% 36%); background: hsl(50 100% 96%); }
+  td { border: 1px solid hsl(214 32% 88%); vertical-align: top; padding: 4px; height: 96px; }
+  td.empty { background: hsl(214 30% 97%); }
+  td.sun { background: hsl(50 100% 96%); }
+  .num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 700; }
+  td.sun .num { color: hsl(38 95% 36%); }
+  .ev { font-size: 9.5px; line-height: 1.25; font-weight: 600; padding: 2px 4px; border-radius: 3px; border-left: 2px solid; margin-top: 2px; word-wrap: break-word; overflow-wrap: anywhere; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 14px; font-size: 10px; color: hsl(215 25% 35%); border-top: 1px solid hsl(214 32% 88%); }
+  .lg { display: inline-flex; align-items: center; gap: 4px; }
+  .sw { width: 10px; height: 10px; border-radius: 2px; border-left: 2px solid; display: inline-block; }
+  .foot { text-align: center; font-size: 9px; color: hsl(215 16% 55%); padding: 0 14px 8px; }
+  @page { size: A4 landscape; margin: 8mm; }
+  @media print { body { padding: 0; } .page { margin: 0; max-width: none; border-radius: 0; } tr { break-inside: avoid; } }
+</style>
+</head>
+<body>
+`;
+
+  for (const m of months) {
+    const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
+    const startDow = new Date(m.year, m.month, 1).getDay();
+    const cells: string[] = [];
+    for (let i = 0; i < startDow; i++) cells.push('<td class="empty"></td>');
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = toDateStr(m.year, m.month, d);
+      const isSun = (startDow + d - 1) % 7 === 0;
+      const evs = (byDate.get(date) ?? [])
+        .map((e) => {
+          const c = gridColors[e.category] ?? gridColors.general;
+          return `<div class="ev" style="background:${c.bg};color:${c.fg};border-color:${c.fg}">${
+            categoryIcons[e.category]
+          } ${escapeHtml(e.title)}</div>`;
+        })
+        .join("");
+      cells.push(`<td${isSun ? ' class="sun"' : ""}><span class="num">${d}</span>${evs}</td>`);
+    }
+    while (cells.length % 7 !== 0) cells.push('<td class="empty"></td>');
+
+    let rows = "";
+    for (let i = 0; i < cells.length; i += 7) rows += `<tr>${cells.slice(i, i + 7).join("")}</tr>`;
+
+    html += `<section class="page">
+  <div class="brand"><strong>Annual School Academic Calendar 2027–28</strong><span>${
+    schoolName ? `${escapeHtml(schoolName)} • ` : ""
+  }by AceEdX</span></div>
+  <div class="head"><h2>${MONTHS_LONG[m.month]} ${m.year}</h2>${
+      m.isPreparation ? '<span class="tag">Preparation month</span>' : '<span class="tag">Academic Year 2027–28</span>'
+    }</div>
+  <table><thead><tr>${GRID_DAYS.map((d, i) => `<th${i === 0 ? ' class="sun"' : ""}>${d}</th>`).join(
+    ""
+  )}</tr></thead><tbody>${rows}</tbody></table>
+  <div class="legend">${legend}</div>
+  <p class="foot">Tentative and regional dates should be confirmed with official circulars.</p>
+</section>
+`;
+  }
+
+  html += `</body></html>`;
+  return html;
+}
+
+/** Opens the chosen months as grid pages and starts the print / Save as PDF dialog. */
+export function printMonthGrids(events: CalendarEvent[], months: CalendarMonth[], schoolName?: string) {
+  openPrintable(generateMonthGridHTML(events, months, schoolName), monthGridFilename(months));
+}
+
+/** Saves the chosen months as a printable file to keep and print later. */
+export function downloadMonthGrids(events: CalendarEvent[], months: CalendarMonth[], schoolName?: string) {
+  saveHTMLFile(generateMonthGridHTML(events, months, schoolName), monthGridFilename(months));
 }
