@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { defaultEvents, CalendarEvent } from "@/data/calendarData";
 import { getAllCalendarDates, getCalendarMonths, isPreparationDate } from "@/utils/calendarRange";
-import { generateCalendarCSV } from "@/utils/calendarExport";
+import { generateCalendarCSV, generateMonthGridHTML, getMonthRange, monthGridFilename } from "@/utils/calendarExport";
 import { migrateStoredEvents } from "@/hooks/useCalendarEvents";
 
 describe("calendar span", () => {
@@ -55,5 +55,31 @@ describe("returning-user migration", () => {
   it("leaves saved events untouched when already on the current version", () => {
     const saved = [custom];
     expect(migrateStoredEvents(saved, "2027-28-v1")).toBe(saved);
+  });
+});
+
+describe("month-wise downloads", () => {
+  it("picks every month from the chosen start to the chosen end", () => {
+    const months = getMonthRange(5, 7); // Mar 2027 – May 2027
+    expect(months.map((m) => `${m.month}-${m.year}`)).toEqual(["2-2027", "3-2027", "4-2027"]);
+    expect(getMonthRange(7, 5)).toHaveLength(3);
+  });
+
+  it("prints one page per month with every event title in full", () => {
+    const long = "Inter-House Science Exhibition and Innovation Fair Grand Finale";
+    const evs: CalendarEvent[] = [
+      { id: "a", date: "2027-03-10", title: long, category: "academic" },
+      ...[1, 2, 3, 4, 5].map((n) => ({ id: `x${n}`, date: "2027-03-15", title: `Event ${n}`, category: "club" as const })),
+    ];
+    const html = generateMonthGridHTML(evs, getMonthRange(5, 6));
+    expect(html.match(/<section class="page">/g)).toHaveLength(2);
+    expect(html).toContain(long);
+    [1, 2, 3, 4, 5].forEach((n) => expect(html).toContain(`Event ${n}`));
+    expect(html).not.toContain("more");
+  });
+
+  it("names the file after the chosen months", () => {
+    expect(monthGridFilename(getMonthRange(5, 5))).toBe("aceedx-calendar-mar-2027.html");
+    expect(monthGridFilename(getMonthRange(5, 7))).toBe("aceedx-calendar-mar-2027-to-may-2027.html");
   });
 });
