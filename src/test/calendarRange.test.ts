@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { defaultEvents, CalendarEvent } from "@/data/calendarData";
 import { getAllCalendarDates, getCalendarMonths, isPreparationDate } from "@/utils/calendarRange";
-import { generateCalendarCSV, generateMonthGridHTML, getMonthRange, monthGridFilename } from "@/utils/calendarExport";
+import { generateCalendarCSV, generatePrintableHTML, generateMonthGridHTML, getMonthRange, monthGridFilename } from "@/utils/calendarExport";
 import { migrateStoredEvents } from "@/hooks/useCalendarEvents";
 
 describe("calendar span", () => {
@@ -81,5 +81,17 @@ describe("month-wise downloads", () => {
   it("names the file after the chosen months", () => {
     expect(monthGridFilename(getMonthRange(5, 5))).toBe("aceedx-calendar-mar-2027.html");
     expect(monthGridFilename(getMonthRange(5, 7))).toBe("aceedx-calendar-mar-2027-to-may-2027.html");
+  });
+});
+
+describe("name printed at the top", () => {
+  it("prints the chosen name at the top of every month page and the full list", () => {
+    const html = generateMonthGridHTML([], getMonthRange(5, 6), "Sunrise <Public> School");
+    expect(html.match(/<div class="school">Sunrise &lt;Public&gt; School<\/div>/g)).toHaveLength(2);
+    expect(generatePrintableHTML([], "Sunrise School")).toContain('<p class="school">Sunrise School</p>');
+  });
+
+  it("prints no name line when left blank", () => {
+    expect(generateMonthGridHTML([], getMonthRange(5, 5), "  ")).not.toContain('class="school"');
   });
 });

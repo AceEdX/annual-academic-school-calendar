@@ -6,8 +6,8 @@ import EventModal from "@/components/EventModal";
 import EventLegend from "@/components/EventLegend";
 import EventBadge from "@/components/EventBadge";
 import CategoryEventsPanel from "@/components/CategoryEventsPanel";
-import MonthDownloadDialog from "@/components/MonthDownloadDialog";
-import { downloadCSV, downloadPrintableHTML, printMonthGrids } from "@/utils/calendarExport";
+import MonthDownloadDialog, { PrintMode } from "@/components/MonthDownloadDialog";
+import { downloadCSV } from "@/utils/calendarExport";
 import { getCalendarMonths, MONTH_NAMES } from "@/utils/calendarRange";
 import { Button } from "@/components/ui/button";
 import {
@@ -83,6 +83,11 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
   const [viewMode, setViewMode] = useState<"month" | "year">("month");
   const [selectedCategory, setSelectedCategory] = useState<EventCategory | null>(null);
   const [monthDialogOpen, setMonthDialogOpen] = useState(false);
+  const [printMode, setPrintMode] = useState<PrintMode>("months");
+  const openPrintDialog = (mode: PrintMode) => {
+    setPrintMode(mode);
+    setMonthDialogOpen(true);
+  };
 
   const currentMonth = MONTHS[currentMonthIdx];
 
@@ -192,13 +197,11 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => printMonthGrids(events, [currentMonth])}
-                  >
+                  <DropdownMenuItem onClick={() => openPrintDialog("months")}>
                     <CalendarDays className="w-4 h-4 mr-2" />
                     Print this month ({monthLabel(currentMonth)})
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setMonthDialogOpen(true)}>
+                  <DropdownMenuItem onClick={() => openPrintDialog("months")}>
                     <CalendarRange className="w-4 h-4 mr-2" />
                     Choose months (from – to)…
                   </DropdownMenuItem>
@@ -207,7 +210,7 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
                     <FileText className="w-4 h-4 mr-2" />
                     Download CSV (all dates)
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => downloadPrintableHTML(events)}>
+                  <DropdownMenuItem onClick={() => openPrintDialog("list")}>
                     <Printer className="w-4 h-4 mr-2" />
                     Print full list / Save as PDF
                   </DropdownMenuItem>
@@ -494,6 +497,7 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
         onOpenChange={setMonthDialogOpen}
         events={events}
         initialIdx={currentMonthIdx}
+        mode={printMode}
       />
     </div>
   );
