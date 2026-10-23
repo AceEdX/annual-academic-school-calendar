@@ -30,6 +30,7 @@ export default function CalendarPage() {
 
   return (
     <Index
+      user={user}
       userName={user.user_metadata?.full_name || user.email || "User"}
       userEmail={user.email || ""}
       onSignOut={handleSignOut}

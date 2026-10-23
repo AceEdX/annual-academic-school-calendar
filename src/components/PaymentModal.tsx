@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -11,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { IndianRupee, Phone, User as UserIcon } from "lucide-react";
+import { IndianRupee, Phone, ShieldCheck, User as UserIcon } from "lucide-react";
 import { z } from "zod";
+import { CALENDAR_PRICE_INR } from "@/data/pricing";
 
 const formSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -32,31 +34,42 @@ interface PaymentModalProps {
   onSuccess: () => void;
 }
 
+const metaName = (user: User) => String(user.user_metadata?.full_name ?? "").slice(0, 100);
+const metaPhone = (user: User) => String(user.user_metadata?.phone ?? "").replace(/\D/g, "").slice(-10);
+
+const loadRazorpay = (): Promise<boolean> =>
+  new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+
 export default function PaymentModal({ open, onClose, user, onSuccess }: PaymentModalProps) {
   const { toast } = useToast();
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [name, setName] = useState(() => metaName(user));
+  const [phone, setPhone] = useState(() => metaPhone(user));
   const [loading, setLoading] = useState(false);
 
-  const loadRazorpay = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
+  useEffect(() => {
+    if (open) {
+      setName((n) => n || metaName(user));
+      setPhone((p) => p || metaPhone(user));
+      // Start loading the checkout script early so paying feels instant.
+      loadRazorpay();
+    }
+  }, [open, user]);
 
   const handlePay = async () => {
     const result = formSchema.safeParse({ name, phone });
     if (!result.success) {
       toast({
-        title: "Invalid input",
+        title: "Please check your details",
         description: result.error.errors[0].message,
         variant: "destructive",
       });
@@ -66,15 +79,11 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
     setLoading(true);
 
     try {
-      // Load Razorpay SDK
       const loaded = await loadRazorpay();
       if (!loaded) {
-        toast({ title: "Error", description: "Failed to load Razorpay SDK. Please try again.", variant: "destructive" });
-        setLoading(false);
-        return;
+        throw new Error("Couldn't open the payment window. Please check your internet and try again.");
       }
 
-      // Create order via edge function
       const { data: orderData, error: orderError } = await supabase.functions.invoke("create-razorpay-order", {
         body: {
           buyer_name: result.data.name,
@@ -84,16 +93,15 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
       });
 
       if (orderError || !orderData?.order_id) {
-        throw new Error(orderError?.message || "Failed to create order");
+        throw new Error("Couldn't start the payment. Please try again in a moment.");
       }
 
-      // Open Razorpay checkout
-      const options = {
+      const razorpay = new window.Razorpay({
         key: orderData.razorpay_key_id,
         amount: orderData.amount,
         currency: "INR",
-        name: "Annual School Academic Calendar by AceEdX",
-        description: "Academic Year 2027–28",
+        name: "AceEdX",
+        description: "Annual School Academic Calendar 2027–28",
         order_id: orderData.order_id,
         prefill: {
           name: result.data.name,
@@ -101,7 +109,7 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
           contact: result.data.phone,
         },
         handler: async (response: any) => {
-          // Verify payment
+          setLoading(true);
           try {
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
               "verify-razorpay-payment",
@@ -114,54 +122,61 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
                 },
               }
             );
-
-            if (verifyError || !verifyData?.success) {
-              throw new Error("Payment verification failed");
-            }
-
-            toast({ title: "Payment Successful! 🎉", description: "You now have full access to the calendar." });
+            if (verifyError || !verifyData?.success) throw new Error("verify");
+            toast({ title: "Payment successful! 🎉", description: "Downloads and printing are now unlocked." });
             onSuccess();
-          } catch (err: any) {
-            toast({ title: "Verification failed", description: err.message, variant: "destructive" });
+          } catch {
+            toast({
+              title: "We couldn't confirm your payment",
+              description: "If money was taken, please refresh the page in a minute or contact AceEdX with your payment ID.",
+              variant: "destructive",
+            });
+          } finally {
+            setLoading(false);
           }
         },
-        theme: {
-          color: "#2563a8",
+        modal: {
+          ondismiss: () => setLoading(false),
         },
-      };
+        theme: { color: "#1d4ed8" },
+      });
 
-      const razorpay = new window.Razorpay(options);
       razorpay.on("payment.failed", (response: any) => {
         toast({
-          title: "Payment Failed",
-          description: response.error.description || "Something went wrong. Please try again.",
+          title: "Payment failed",
+          description: response?.error?.description || "Something went wrong. Please try again.",
           variant: "destructive",
         });
       });
       razorpay.open();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Something went wrong", variant: "destructive" });
-    } finally {
+      toast({ title: "Payment not started", description: err.message, variant: "destructive" });
       setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={open} onOpenChange={(v) => !v && !loading && onClose()}>
       <DialogContent className="sm:max-w-md font-body">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Complete Your Purchase</DialogTitle>
+          <DialogTitle className="font-display text-xl text-primary">Unlock downloads & printing</DialogTitle>
+          <DialogDescription>
+            One small payment unlocks every download and print option for your calendar.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="bg-muted rounded-lg p-4 mb-4">
-          <div className="flex items-center justify-between">
+        <div className="bg-muted rounded-lg p-4">
+          <div className="flex items-center justify-between gap-3">
             <div>
               <p className="font-medium text-foreground">Annual School Academic Calendar 2027–28</p>
-              <p className="text-sm text-muted-foreground">Lifetime access • Fully customizable</p>
+              <p className="text-sm text-muted-foreground">Month-wise PDFs, full list & CSV • Unlimited prints</p>
+              <p className="text-xs font-semibold text-accent-foreground bg-accent inline-block rounded px-2 py-0.5 mt-2">
+                Introductory price
+              </p>
             </div>
-            <div className="flex items-center gap-1 text-2xl font-bold text-foreground">
+            <div className="flex items-center text-2xl font-bold text-foreground shrink-0">
               <IndianRupee className="w-5 h-5" />
-              49
+              {CALENDAR_PRICE_INR}
             </div>
           </div>
         </div>
@@ -188,6 +203,7 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="buyer-phone"
+                inputMode="numeric"
                 placeholder="10-digit mobile number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
@@ -197,13 +213,15 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
             </div>
           </div>
 
-          <div className="text-xs text-muted-foreground">
-            Email: {user.email}
-          </div>
+          <p className="text-xs text-muted-foreground">Email: {user.email}</p>
 
           <Button className="w-full gap-2" size="lg" onClick={handlePay} disabled={loading}>
-            {loading ? "Processing..." : "Pay ₹49 with Razorpay"}
+            {loading ? "Please wait..." : `Pay ₹${CALENDAR_PRICE_INR} & unlock downloads`}
           </Button>
+          <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+            Secure payment by Razorpay — UPI, cards, net banking & wallets
+          </p>
         </div>
       </DialogContent>
     </Dialog>

@@ -8,6 +8,9 @@ import EventBadge from "@/components/EventBadge";
 import CategoryEventsPanel from "@/components/CategoryEventsPanel";
 import MonthDownloadDialog, { PrintMode } from "@/components/MonthDownloadDialog";
 import { downloadCSV } from "@/utils/calendarExport";
+import PaymentModal from "@/components/PaymentModal";
+import { usePurchaseStatus } from "@/hooks/usePurchaseStatus";
+import { User } from "@supabase/supabase-js";
 import { getCalendarMonths, MONTH_NAMES } from "@/utils/calendarRange";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface IndexProps {
+  user: User;
   userName: string;
   userEmail: string;
   onSignOut: () => void;
@@ -63,7 +67,7 @@ const allCategories: EventCategory[] = [
   "holiday", "sports", "academic", "cultural", "club", "exam", "general",
 ];
 
-export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
+export default function Index({ user, userName, userEmail, onSignOut }: IndexProps) {
   const {
     events,
     addEvent,
@@ -84,6 +88,16 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
   const [selectedCategory, setSelectedCategory] = useState<EventCategory | null>(null);
   const [monthDialogOpen, setMonthDialogOpen] = useState(false);
   const [printMode, setPrintMode] = useState<PrintMode>("months");
+  const { hasPaid, loading: purchaseLoading, refetch: refetchPurchase } = usePurchaseStatus(user.id);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
+  const handleDownloadMenuOpen = (open: boolean) => {
+    if (open && !hasPaid) {
+      if (!purchaseLoading) setPaymentOpen(true);
+      return;
+    }
+    setDownloadMenuOpen(open);
+  };
   const openPrintDialog = (mode: PrintMode) => {
     setPrintMode(mode);
     setMonthDialogOpen(true);
@@ -189,7 +203,7 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
                 <Plus className="w-4 h-4" />
                 Add Event
               </Button>
-              <DropdownMenu>
+              <DropdownMenu open={downloadMenuOpen} onOpenChange={handleDownloadMenuOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="onPrimary" size="sm" className="gap-1.5">
                     <Download className="w-4 h-4" />
@@ -498,6 +512,17 @@ export default function Index({ userName, userEmail, onSignOut }: IndexProps) {
         events={events}
         initialIdx={currentMonthIdx}
         mode={printMode}
+      />
+
+      <PaymentModal
+        open={paymentOpen}
+        onClose={() => setPaymentOpen(false)}
+        user={user}
+        onSuccess={async () => {
+          setPaymentOpen(false);
+          await refetchPurchase();
+          setDownloadMenuOpen(true);
+        }}
       />
     </div>
   );

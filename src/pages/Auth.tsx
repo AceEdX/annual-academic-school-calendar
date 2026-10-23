@@ -75,7 +75,7 @@ export default function Auth() {
               : "Sign up failed. Please try again later.";
           toast({ title: "Sign up failed", description: msg, variant: "destructive" });
         } else {
-          toast({ title: "Welcome! 🎉", description: "Your account has been created. Enjoy your free calendar!" });
+          toast({ title: "Welcome! 🎉", description: "Your account has been created. Your calendar is ready." });
         }
       } else {
         const { error } = await signIn(emailResult.data, password);
@@ -115,7 +115,7 @@ export default function Auth() {
             <p className="text-muted-foreground mt-2">
               {mode === "login"
                 ? "Sign in to access the Annual School Academic Calendar"
-                : "Sign up free to access the Annual School Academic Calendar 2027–28"}
+                : "Sign up to access the Annual School Academic Calendar 2027–28"}
             </p>
           </div>
 
