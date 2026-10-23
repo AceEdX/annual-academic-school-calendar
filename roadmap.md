@@ -9,3 +9,5 @@
 - [x] Stop welcome emails; save sign-up name, email and phone in the app's user database.
 - [x] Replace home-page preview pictures with the new Oct 2026–May 2028 calendar.
 - [x] Remove "Free" from home-page Download buttons; require one-time ₹49 Razorpay payment before calendar downloads/prints.
+- [x] Diagnose ₹49 payment failures; add safe payment recovery and clearer failure messages.
+- [ ] Register the calendar website in Razorpay (blocked: owner must do this in Razorpay).
