@@ -4,6 +4,8 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const allowedOrigins = [
   "https://annual-academic-school-calendar.lovable.app",
   "https://id-preview--ebbe0e7b-e0ae-41c5-8ae7-1bae6bf26c7a.lovable.app",
+  "https://academiccalendar.aceedx.com",
+  "https://www.academiccalendar.aceedx.com",
 ];
 
 function getCorsHeaders(req: Request) {
