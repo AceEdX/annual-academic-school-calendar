@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,23 +18,58 @@ const phoneSchema = z
   .trim()
   .regex(/^\+?[0-9\s-]{7,15}$/, "Please enter a valid phone number");
 
+type Mode = "login" | "signup" | "forgot";
+
 export default function Auth() {
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, sendPasswordReset } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [mode, setMode] = useState<"login" | "signup">("signup");
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get("mode");
+  const [mode, setMode] = useState<Mode>(
+    initialMode === "login" || initialMode === "forgot" ? initialMode : "signup"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetSentTo, setResetSentTo] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       navigate("/calendar");
     }
   }, [user, navigate]);
+
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    setResetSentTo(null);
+    setPassword("");
+  };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      toast({ title: "Invalid email", description: emailResult.error.errors[0].message, variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await sendPasswordReset(emailResult.data);
+    setSubmitting(false);
+    if (error) {
+      const info = getAuthErrorInfo(error, "login");
+      toast({
+        title: info.title === "Sign in failed" ? "Couldn't send the reset link" : info.title,
+        description: info.description,
+        variant: "destructive",
+      });
+      return;
+    }
+    setResetSentTo(emailResult.data);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +87,7 @@ export default function Auth() {
     }
 
     setSubmitting(true);
+
 
     try {
       if (mode === "signup") {
@@ -110,16 +146,56 @@ export default function Auth() {
           <div className="text-center mb-8">
             <img src={aceEdxLogo} alt="AceEdX" className="h-16 w-auto mx-auto mb-4" />
             <h1 className="font-display text-3xl font-bold text-foreground">
-              {mode === "login" ? "Welcome Back" : "Create Account"}
+              {mode === "login" ? "Welcome Back" : mode === "forgot" ? "Forgot Password" : "Create Account"}
             </h1>
             <p className="text-muted-foreground mt-2">
               {mode === "login"
                 ? "Sign in to access the Annual School Academic Calendar"
+                : mode === "forgot"
+                ? "Enter your account email and we'll send you a link to set a new password"
                 : "Sign up to access the Annual School Academic Calendar 2027–28"}
             </p>
           </div>
 
           <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+            {mode === "forgot" ? (
+              resetSentTo ? (
+                <div className="text-center space-y-3">
+                  <Mail className="w-10 h-10 text-primary mx-auto" />
+                  <p className="font-medium text-foreground">Check your email</p>
+                  <p className="text-sm text-muted-foreground">
+                    If an account exists for <span className="font-medium text-foreground">{resetSentTo}</span>, a
+                    password reset link is on its way. Open it on this device to set a new password. Check your spam
+                    folder if you don't see it in a few minutes.
+                  </p>
+                  <Button variant="outline" className="w-full" onClick={() => setResetSentTo(null)}>
+                    Send again
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgot} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="forgot-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={submitting}>
+                    {submitting ? "Please wait..." : "Send reset link"}
+                  </Button>
+                </form>
+              )
+            ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "signup" && (
                 <>
@@ -168,13 +244,25 @@ export default function Auth() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
+                    autoComplete="email"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  {mode === "login" && (
+                    <button
+                      type="button"
+                      className="text-xs text-primary font-medium hover:underline"
+                      onClick={() => switchMode("forgot")}
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -208,24 +296,33 @@ export default function Auth() {
                 {submitting ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
               </Button>
             </form>
+            )}
 
             <div className="mt-6 text-center text-sm">
               {mode === "login" ? (
                 <p className="text-muted-foreground">
                   Don't have an account?{" "}
-                  <button className="text-primary font-medium hover:underline" onClick={() => setMode("signup")}>
+                  <button className="text-primary font-medium hover:underline" onClick={() => switchMode("signup")}>
                     Sign up
+                  </button>
+                </p>
+              ) : mode === "forgot" ? (
+                <p className="text-muted-foreground">
+                  Remembered it?{" "}
+                  <button className="text-primary font-medium hover:underline" onClick={() => switchMode("login")}>
+                    Back to sign in
                   </button>
                 </p>
               ) : (
                 <p className="text-muted-foreground">
                   Already have an account?{" "}
-                  <button className="text-primary font-medium hover:underline" onClick={() => setMode("login")}>
+                  <button className="text-primary font-medium hover:underline" onClick={() => switchMode("login")}>
                     Sign in
                   </button>
                 </p>
               )}
             </div>
+
           </div>
         </div>
       </div>
