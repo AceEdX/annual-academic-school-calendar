@@ -56,6 +56,9 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
   const [name, setName] = useState(() => metaName(user));
   const [phone, setPhone] = useState(() => metaPhone(user));
   const [loading, setLoading] = useState(false);
+  // While Razorpay Checkout is open our own dialog must be closed: an open dialog
+  // blocks clicks/focus outside itself, which makes the card fields unclickable.
+  const [checkoutActive, setCheckoutActive] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -140,10 +143,14 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
             });
           } finally {
             setLoading(false);
+            setCheckoutActive(false);
           }
         },
         modal: {
-          ondismiss: () => setLoading(false),
+          ondismiss: () => {
+            setLoading(false);
+            setCheckoutActive(false);
+          },
         },
         theme: { color: "#1d4ed8" },
       });
@@ -155,15 +162,22 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
           variant: "destructive",
         });
       });
+
+      // Close our dialog first, then open Checkout once the dialog has fully let go
+      // of the page (it blocks pointer events and focus while open).
+      setCheckoutActive(true);
+      await new Promise((r) => setTimeout(r, 300));
+      document.body.style.pointerEvents = "";
       razorpay.open();
     } catch (err: any) {
       toast({ title: "Payment not started", description: err.message, variant: "destructive" });
       setLoading(false);
+      setCheckoutActive(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && !loading && onClose()}>
+    <Dialog open={open && !checkoutActive} onOpenChange={(v) => !v && !loading && onClose()}>
       <DialogContent className="sm:max-w-md font-body">
         <DialogHeader>
           <DialogTitle className="font-display text-xl text-primary">Unlock downloads & printing</DialogTitle>
