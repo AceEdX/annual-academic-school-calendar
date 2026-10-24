@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export default function PasswordRecoveryRedirect() {
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const goToReset = () => {
@@ -27,5 +26,5 @@ export default function PasswordRecoveryRedirect() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return location ? null : null;
+  return null;
 }
