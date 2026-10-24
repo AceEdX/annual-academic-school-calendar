@@ -10,4 +10,7 @@
 - [x] Replace home-page preview pictures with the new Oct 2026–May 2028 calendar.
 - [x] Remove "Free" from home-page Download buttons; require one-time ₹49 Razorpay payment before calendar downloads/prints.
 - [x] Diagnose ₹49 payment failures; add safe payment recovery and clearer failure messages.
+- [x] Allow payments from academiccalendar.aceedx.com (was blocked before reaching Razorpay).
+- [x] Add Forgot password + set-new-password page; direct-link support for Hostinger.
+- [ ] Upload the new build to Hostinger (blocked: owner uploads the site files there).
 - [ ] Register the calendar website in Razorpay (blocked: owner must do this in Razorpay).
