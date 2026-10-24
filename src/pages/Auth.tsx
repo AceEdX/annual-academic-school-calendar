@@ -18,23 +18,58 @@ const phoneSchema = z
   .trim()
   .regex(/^\+?[0-9\s-]{7,15}$/, "Please enter a valid phone number");
 
+type Mode = "login" | "signup" | "forgot";
+
 export default function Auth() {
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, sendPasswordReset } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [mode, setMode] = useState<"login" | "signup">("signup");
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get("mode");
+  const [mode, setMode] = useState<Mode>(
+    initialMode === "login" || initialMode === "forgot" ? initialMode : "signup"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetSentTo, setResetSentTo] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       navigate("/calendar");
     }
   }, [user, navigate]);
+
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    setResetSentTo(null);
+    setPassword("");
+  };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      toast({ title: "Invalid email", description: emailResult.error.errors[0].message, variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await sendPasswordReset(emailResult.data);
+    setSubmitting(false);
+    if (error) {
+      const info = getAuthErrorInfo(error, "login");
+      toast({
+        title: info.title === "Sign in failed" ? "Couldn't send the reset link" : info.title,
+        description: info.description,
+        variant: "destructive",
+      });
+      return;
+    }
+    setResetSentTo(emailResult.data);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +87,7 @@ export default function Auth() {
     }
 
     setSubmitting(true);
+
 
     try {
       if (mode === "signup") {
