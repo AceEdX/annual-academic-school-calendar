@@ -6,3 +6,4 @@
 - `check-payment-status` recovers interrupted payments by querying Razorpay only for the user's own pending order IDs (never by email) — the Razorpay account is shared with other AceEdX products, so email matching would unlock wrong buyers.
 - Every edge function's CORS `allowedOrigins` list must include every address the app is served from (lovable.app published + preview, and the Hostinger-hosted `academiccalendar.aceedx.com`) — a missing origin silently blocks payments and sign-up calls from that site.
 - Password reset: `/auth?mode=forgot` sends the link to `/reset-password`; `PasswordRecoveryRedirect` (in `App.tsx`) forwards recovery links that land on any other page — the external domain may not be an allowed auth redirect, so links can fall back to the site root.
+- `PaymentModal` closes its own dialog before opening Razorpay Checkout — an open dialog blocks clicks and focus outside itself, which made the card fields unclickable.
