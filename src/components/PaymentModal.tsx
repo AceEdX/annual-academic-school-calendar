@@ -110,7 +110,7 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
         prefill: {
           name: result.data.name,
           email: user.email,
-          contact: result.data.phone,
+          contact: `+91${result.data.phone}`,
         },
         handler: async (response: any) => {
           setLoading(true);
