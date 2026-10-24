@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const allowedOrigins = [
   "https://annual-academic-school-calendar.lovable.app",
+  "https://academiccalendar-aceedx-com.lovable.app",
   "https://id-preview--ebbe0e7b-e0ae-41c5-8ae7-1bae6bf26c7a.lovable.app",
   "https://academiccalendar.aceedx.com",
   "https://www.academiccalendar.aceedx.com",
@@ -90,7 +91,7 @@ serve(async (req) => {
       });
     }
 
-    const calendarLink = "https://annual-academic-school-calendar.lovable.app/auth";
+    const calendarLink = "https://academiccalendar.aceedx.com/auth";
     const displayName = name || "Educator";
 
     const res = await fetch("https://api.resend.com/emails", {
