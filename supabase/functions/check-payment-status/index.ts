@@ -1,27 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 // Recovery check: confirms a calendar payment by looking ONLY at this user's own
 // Razorpay orders (created by create-razorpay-order). Used when the browser closed
 // or lost connection before verify-razorpay-payment could run.
 
-const allowedOrigins = [
-  "https://annual-academic-school-calendar.lovable.app",
-  "https://academiccalendar-aceedx-com.lovable.app",
-  "https://id-preview--ebbe0e7b-e0ae-41c5-8ae7-1bae6bf26c7a.lovable.app",
-  "https://academiccalendar.aceedx.com",
-  "https://www.academiccalendar.aceedx.com",
-];
-
 const CALENDAR_PRICE_PAISE = 4900;
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("origin") || "";
-  return {
-    "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
-    "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  };
-}
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
