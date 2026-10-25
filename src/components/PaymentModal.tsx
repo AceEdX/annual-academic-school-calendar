@@ -35,6 +35,10 @@ interface PaymentModalProps {
   onSuccess: () => void;
 }
 
+const isTestPreview =
+  typeof window !== "undefined" &&
+  (/\.lovableproject\.com$/.test(window.location.hostname) || window.location.hostname.startsWith("id-preview--"));
+
 const metaName = (user: User) => String(user.user_metadata?.full_name ?? "").slice(0, 100);
 const metaPhone = (user: User) => String(user.user_metadata?.phone ?? "").replace(/\D/g, "").slice(-10);
 
@@ -235,6 +239,13 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
           </div>
 
           <p className="text-xs text-muted-foreground">Email: {user.email}</p>
+
+          {isTestPreview && (
+            <p className="text-xs rounded-md border border-accent bg-accent/20 text-foreground p-2">
+              This is the test preview. Razorpay only accepts payments on your live website
+              (academiccalendar.aceedx.com), so a payment here may be refused. No money is taken if it is.
+            </p>
+          )}
 
           <Button className="w-full gap-2" size="lg" onClick={handlePay} disabled={loading}>
             {loading ? "Please wait..." : `Pay ₹${CALENDAR_PRICE_INR} & unlock downloads`}
