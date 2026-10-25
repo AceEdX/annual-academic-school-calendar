@@ -8,6 +8,13 @@
       "when": 1792673890752,
       "tag": "0000_save_signup_details_to_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792944832683,
+      "tag": "0001_save_calendar_per_user",
+      "breakpoints": true
     }
   ]
 }

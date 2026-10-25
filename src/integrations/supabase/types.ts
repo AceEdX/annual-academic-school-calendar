@@ -119,6 +119,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_calendars: {
+        Row: {
+          calendar_version: string
+          created_at: string
+          events: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_version: string
+          created_at?: string
+          events?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_version?: string
+          created_at?: string
+          events?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
