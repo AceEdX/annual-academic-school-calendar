@@ -2,7 +2,25 @@ import { describe, it, expect } from "vitest";
 import { defaultEvents, CalendarEvent } from "@/data/calendarData";
 import { getAllCalendarDates, getCalendarMonths, isPreparationDate } from "@/utils/calendarRange";
 import { generateCalendarCSV, generatePrintableHTML, generateMonthGridHTML, getMonthRange, monthGridFilename } from "@/utils/calendarExport";
-import { migrateStoredEvents } from "@/hooks/useCalendarEvents";
+import { migrateStoredEvents, chooseStartingEvents } from "@/hooks/useCalendarEvents";
+import { CALENDAR_VERSION } from "@/data/calendarData";
+
+describe("changes saved to the account", () => {
+  const saved: CalendarEvent = { id: "s1", date: "2027-07-01", title: "Our Sports Day", category: "sports", isCustom: true };
+  const deviceOnly: CalendarEvent = { id: "d1", date: "2027-07-02", title: "Device copy", category: "general", isCustom: true };
+
+  it("shows the account's saved changes on login, even on a different device", () => {
+    const result = chooseStartingEvents({ events: [saved], version: CALENDAR_VERSION }, [deviceOnly]);
+    expect(result.events).toEqual([saved]);
+    expect(result.needsUpload).toBe(false);
+  });
+
+  it("uploads the device's changes when nothing is saved to the account yet", () => {
+    const result = chooseStartingEvents(null, [deviceOnly]);
+    expect(result.events).toEqual([deviceOnly]);
+    expect(result.needsUpload).toBe(true);
+  });
+});
 
 describe("calendar span", () => {
   it("runs from October 2026 to May 2028 (20 months)", () => {

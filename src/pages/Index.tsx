@@ -35,6 +35,9 @@ import {
   CalendarDays,
   CalendarRange,
   LogOut,
+  Cloud,
+  CloudOff,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -70,12 +73,14 @@ const allCategories: EventCategory[] = [
 export default function Index({ user, userName, userEmail, onSignOut }: IndexProps) {
   const {
     events,
+    saveStatus,
+    retrySave,
     addEvent,
     updateEvent,
     deleteEvent,
     resetToDefaults,
     getEventsForMonth,
-  } = useCalendarEvents();
+  } = useCalendarEvents(user.id);
 
   const [currentMonthIdx, setCurrentMonthIdx] = useState(initialMonthIdx);
   const [activeFilters, setActiveFilters] = useState<Set<EventCategory>>(
@@ -190,6 +195,35 @@ export default function Index({ user, userName, userEmail, onSignOut }: IndexPro
               <span className="text-sm text-primary-foreground/70 hidden lg:inline">
                 {userEmail}
               </span>
+              {saveStatus === "error" ? (
+                <button
+                  type="button"
+                  onClick={retrySave}
+                  className="flex items-center gap-1 text-xs font-medium text-accent underline"
+                  title="Your changes are kept on this device and will be saved to your account when the connection is back."
+                >
+                  <CloudOff className="w-3.5 h-3.5" />
+                  Not saved yet – retry
+                </button>
+              ) : (
+                <span
+                  className="flex items-center gap-1 text-xs text-primary-foreground/80"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {saveStatus === "saved" ? (
+                    <>
+                      <Cloud className="w-3.5 h-3.5" />
+                      All changes saved
+                    </>
+                  ) : (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      {saveStatus === "loading" ? "Loading your calendar…" : "Saving…"}
+                    </>
+                  )}
+                </span>
+              )}
               <Button
                 variant="brand"
                 size="sm"
