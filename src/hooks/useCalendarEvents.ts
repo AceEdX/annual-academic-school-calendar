@@ -89,6 +89,7 @@ async function saveRemote(userId: string, events: CalendarEvent[]) {
 export function useCalendarEvents(userId: string) {
   const [events, setEvents] = useState<CalendarEvent[]>(() => loadLocal(userId));
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("loading");
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   const loadedRef = useRef(false);
   const editedBeforeLoadRef = useRef(false);
@@ -134,6 +135,7 @@ export function useCalendarEvents(userId: string) {
   // Load the account's saved calendar
   useEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
     loadedRef.current = false;
     (async () => {
       const { data, error } = await supabase
@@ -145,7 +147,9 @@ export function useCalendarEvents(userId: string) {
       if (error) {
         console.error("Calendar load failed", error);
         setSaveStatus("error");
-        return; // keep the device copy; don't overwrite the account's saved calendar
+        // keep the device copy and try again shortly; never overwrite the account's saved calendar blind
+        retryTimer = setTimeout(() => setLoadAttempt((n) => n + 1), 5000);
+        return;
       }
 
       let finalEvents: CalendarEvent[];
@@ -182,15 +186,19 @@ export function useCalendarEvents(userId: string) {
     })();
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [userId, flush]);
+  }, [userId, flush, loadAttempt]);
 
   // Save straight away when the tab is hidden or closed, and retry failed saves when back online
   useEffect(() => {
     const onHide = () => {
       if (document.visibilityState === "hidden") void flush();
     };
-    const onOnline = () => void flush();
+    const onOnline = () => {
+      if (loadedRef.current) void flush();
+      else setLoadAttempt((n) => n + 1);
+    };
     document.addEventListener("visibilitychange", onHide);
     window.addEventListener("pagehide", onHide);
     window.addEventListener("online", onOnline);
@@ -233,6 +241,10 @@ export function useCalendarEvents(userId: string) {
   const resetToDefaults = useCallback(() => update(() => defaultEvents), [update]);
 
   const retrySave = useCallback(() => {
+    if (!loadedRef.current) {
+      setLoadAttempt((n) => n + 1);
+      return;
+    }
     if (!pendingRef.current) pendingRef.current = eventsRef.current;
     void flush();
   }, [flush]);
