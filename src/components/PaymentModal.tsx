@@ -55,6 +55,27 @@ const loadRazorpay = (): Promise<boolean> =>
     document.body.appendChild(script);
   });
 
+/** Undo anything an app pop-up left behind that blocks clicks on the page. */
+const releasePage = () => {
+  const body = document.body;
+  if (body.style.pointerEvents === "none") body.style.pointerEvents = "";
+  body.removeAttribute("inert");
+  document.querySelectorAll<HTMLElement>(".razorpay-container").forEach((el) => {
+    el.removeAttribute("aria-hidden");
+    el.removeAttribute("inert");
+    el.style.pointerEvents = "auto";
+  });
+};
+
+/** Wait (max ~1.5s) until no app dialog is left on the page. */
+const waitForDialogsToClose = async () => {
+  const start = Date.now();
+  await new Promise((r) => setTimeout(r, 50));
+  while (document.querySelector('[role="dialog"][data-state="open"], [role="dialog"][data-state="closed"]') && Date.now() - start < 1500) {
+    await new Promise((r) => setTimeout(r, 50));
+  }
+};
+
 export default function PaymentModal({ open, onClose, user, onSuccess }: PaymentModalProps) {
   const { toast } = useToast();
   const [name, setName] = useState(() => metaName(user));
@@ -72,6 +93,16 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
       loadRazorpay();
     }
   }, [open, user]);
+
+  // While Checkout is showing, keep the page free: if any app pop-up (menu,
+  // dialog) tries to switch off clicks or hide the page, undo it immediately.
+  useEffect(() => {
+    if (!checkoutActive) return;
+    releasePage();
+    const observer = new MutationObserver(releasePage);
+    observer.observe(document.body, { attributes: true, attributeFilter: ["style", "inert", "aria-hidden"] });
+    return () => observer.disconnect();
+  }, [checkoutActive]);
 
   const handlePay = async () => {
     const result = formSchema.safeParse({ name, phone });
@@ -170,8 +201,8 @@ export default function PaymentModal({ open, onClose, user, onSuccess }: Payment
       // Close our dialog first, then open Checkout once the dialog has fully let go
       // of the page (it blocks pointer events and focus while open).
       setCheckoutActive(true);
-      await new Promise((r) => setTimeout(r, 300));
-      document.body.style.pointerEvents = "";
+      await waitForDialogsToClose();
+      releasePage();
       razorpay.open();
     } catch (err: any) {
       toast({ title: "Payment not started", description: err.message, variant: "destructive" });
