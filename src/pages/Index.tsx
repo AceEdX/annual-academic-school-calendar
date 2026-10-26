@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { CalendarEvent, EventCategory, categoryLabels, categoryIcons } from "@/data/calendarData";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import MonthCalendar from "@/components/MonthCalendar";
@@ -96,13 +96,23 @@ export default function Index({ user, userName, userEmail, onSignOut }: IndexPro
   const { hasPaid, loading: purchaseLoading, refetch: refetchPurchase } = usePurchaseStatus(user.id);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
+  // A Download click made while payment status is still loading is remembered
+  // and acted on as soon as it loads, so the click is never silently lost.
+  const [pendingDownload, setPendingDownload] = useState(false);
   const handleDownloadMenuOpen = (open: boolean) => {
     if (open && !hasPaid) {
-      if (!purchaseLoading) setPaymentOpen(true);
+      if (purchaseLoading) setPendingDownload(true);
+      else setPaymentOpen(true);
       return;
     }
     setDownloadMenuOpen(open);
   };
+  useEffect(() => {
+    if (!pendingDownload || purchaseLoading) return;
+    setPendingDownload(false);
+    if (hasPaid) setDownloadMenuOpen(true);
+    else setPaymentOpen(true);
+  }, [pendingDownload, purchaseLoading, hasPaid]);
   const openPrintDialog = (mode: PrintMode) => {
     setPrintMode(mode);
     setMonthDialogOpen(true);
