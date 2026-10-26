@@ -138,3 +138,12 @@
     @apply bg-[hsl(var(--cal-general-bg))] text-[hsl(var(--cal-general))] border-l-2 border-[hsl(var(--cal-general))];
   }
 }
+
+/* Razorpay Checkout is added to the page outside our app. Pop-up windows in the
+   app switch off clicks on the rest of the page while open; make sure the
+   payment window (card, net banking, close button) always stays clickable. */
+.razorpay-container,
+.razorpay-container iframe,
+.razorpay-backdrop {
+  pointer-events: auto !important;
+}
