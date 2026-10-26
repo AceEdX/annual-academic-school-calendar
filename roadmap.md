@@ -13,5 +13,6 @@
 - [x] Allow payments from academiccalendar.aceedx.com (was blocked before reaching Razorpay).
 - [x] Add Forgot password + set-new-password page; direct-link support for Hostinger.
 - [x] Auto-save calendar edits to each user's account and restore them on login.
+- [x] Keep the payment window (cards, net banking, close button) always clickable; never lose a Download click.
 - [ ] Upload the new build to Hostinger (blocked: owner uploads the site files there).
 - [ ] Register the calendar website in Razorpay (blocked: owner must do this in Razorpay).
